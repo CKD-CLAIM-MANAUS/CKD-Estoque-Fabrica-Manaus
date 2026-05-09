@@ -976,7 +976,7 @@ function bindApp(){
   // ── MAPA ──
   if(tab==="mapa"){
     // search
-    document.getElementById("search-inp")?.addEventListener("input",e=>{ STATE.search=e.target.value; render(); });
+    let _st; document.getElementById("search-inp")?.addEventListener("input",e=>{ STATE.search=e.target.value; clearTimeout(_st); _st=setTimeout(render,350); });
     // filtro tipo
     document.querySelectorAll("[data-ftipo]").forEach(b=>b.addEventListener("click",()=>{ STATE.fTipo=b.dataset.ftipo; render(); }));
     // multi mode
@@ -1013,9 +1013,9 @@ function bindApp(){
   if(tab==="historico"){
     document.querySelectorAll("[data-hacao]").forEach(b=>b.addEventListener("click",()=>{ STATE.hAcao=b.dataset.hacao; render(); }));
     document.querySelectorAll("[data-htipo]").forEach(b=>b.addEventListener("click",()=>{ STATE.hTipo=b.dataset.htipo; render(); }));
-    document.getElementById("h-mod")?.addEventListener("input",e=>{ STATE.hMod=e.target.value; render(); });
-    document.getElementById("h-chassi")?.addEventListener("input",e=>{ STATE.hChassi=e.target.value; render(); });
-    document.getElementById("h-data")?.addEventListener("input",e=>{ STATE.hData=e.target.value; render(); });
+    let _hm,_hc,_hd; document.getElementById("h-mod")?.addEventListener("input",e=>{ STATE.hMod=e.target.value; clearTimeout(_hm); _hm=setTimeout(render,350); });
+    document.getElementById("h-chassi")?.addEventListener("input",e=>{ STATE.hChassi=e.target.value; clearTimeout(_hc); _hc=setTimeout(render,350); });
+    document.getElementById("h-data")?.addEventListener("input",e=>{ STATE.hData=e.target.value; clearTimeout(_hd); _hd=setTimeout(render,350); });
     document.getElementById("btn-hlimpar")?.addEventListener("click",()=>{ STATE.hAcao="Todos"; STATE.hTipo="Todos"; STATE.hMod=""; STATE.hData=""; STATE.hChassi=""; render(); });
   }
 
