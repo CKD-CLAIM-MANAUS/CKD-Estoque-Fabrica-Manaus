@@ -505,9 +505,17 @@ async function login(email, senha){
   try {
     await signInWithEmailAndPassword(auth, email, senha);
   } catch(e){
-    return e.code === "auth/invalid-credential" || e.code === "auth/user-not-found"
-      ? "Email ou senha incorretos."
-      : "Erro ao entrar. Tente novamente.";
+    console.error("Auth error:", e.code, e.message);
+    const msgs = {
+      "auth/invalid-credential":     "Senha incorreta ou usuário não encontrado.",
+      "auth/user-not-found":         "Usuário não encontrado.",
+      "auth/wrong-password":         "Senha incorreta.",
+      "auth/invalid-email":          "Email inválido.",
+      "auth/user-disabled":          "Usuário desativado.",
+      "auth/too-many-requests":      "Muitas tentativas. Aguarde alguns minutos.",
+      "auth/network-request-failed": "Erro de rede. Verifique sua conexão.",
+    };
+    return msgs[e.code] || `Erro (${e.code})`;
   }
 }
 
