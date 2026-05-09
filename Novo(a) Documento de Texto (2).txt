@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Estoque Fábrica Manaus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:       #07090f;
+      --bg2:      #0d1220;
+      --bg3:      #111827;
+      --bg4:      #1e293b;
+      --border:   #1e2d40;
+      --border2:  #2d3f55;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --muted2:   #334155;
+      --amber:    #f59e0b;
+      --amber2:   #d97706;
+      --green:    #22c55e;
+      --green2:   #16a34a;
+      --red:      #ef4444;
+      --red2:     #dc2626;
+      --blue:     #3b82f6;
+      --purple:   #a855f7;
+      --mono:     'JetBrains Mono', monospace;
+      --sans:     'Syne', sans-serif;
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); }
+    #root { min-height: 100vh; }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg2); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    /* ── LOGIN ── */
+    .login-wrap {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: var(--bg);
+      background-image: repeating-linear-gradient(0deg,transparent,transparent 39px,var(--border) 39px,var(--border) 40px),
+                        repeating-linear-gradient(90deg,transparent,transparent 39px,var(--border) 39px,var(--border) 40px);
+    }
+    .login-card {
+      background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: 16px; padding: 40px 36px; width: 100%; max-width: 400px;
+      box-shadow: 0 0 60px rgba(245,158,11,0.08);
+    }
+    .login-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+    .login-logo img { width: 44px; height: 44px; object-fit: contain; }
+    .login-logo-text { font-size: 13px; font-weight: 800; color: var(--text); letter-spacing: 0.04em; line-height: 1.3; }
+    .login-logo-sub { font-size: 10px; color: var(--muted); font-weight: 400; letter-spacing: 0.08em; }
+    .login-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .login-sub { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .field input {
+      width: 100%; background: var(--bg3); border: 1px solid var(--border2);
+      border-radius: 8px; padding: 11px 14px; color: var(--text); font-size: 14px;
+      font-family: var(--sans); outline: none; transition: border-color 0.15s;
+    }
+    .field input:focus { border-color: var(--amber); }
+    .btn-primary {
+      width: 100%; padding: 13px; border: none; border-radius: 8px; cursor: pointer;
+      background: var(--amber); color: #07090f; font-size: 14px; font-weight: 800;
+      font-family: var(--sans); letter-spacing: 0.02em; transition: opacity 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .login-err { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #fca5a5; margin-bottom: 16px; }
+
+    /* ── HEADER ── */
+    .header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg2); border-bottom: 1px solid var(--border);
+      padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-logo img { width: 38px; height: 38px; object-fit: contain; }
+    .header-title { font-size: 14px; font-weight: 800; color: var(--text); }
+    .header-sub { font-size: 9px; color: var(--muted); letter-spacing: 0.08em; margin-top: 1px; }
+    .header-right { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+    .stat-block { text-align: center; }
+    .stat-val { font-size: 18px; font-weight: 800; line-height: 1; }
+    .stat-lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+    .user-badge {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px;
+    }
+    .user-badge-role { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+    .role-admin { background: rgba(245,158,11,0.15); color: var(--amber); }
+    .role-operador { background: rgba(59,130,246,0.15); color: var(--blue); }
+    .user-email { font-size: 11px; color: var(--muted); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .btn-logout { background: transparent; border: 1px solid var(--border2); border-radius: 6px; padding: 5px 10px; color: var(--muted); font-size: 11px; cursor: pointer; font-family: var(--sans); }
+    .btn-logout:hover { color: var(--text); border-color: var(--muted); }
+
+    /* ── TABS ── */
+    .tabs { display: flex; background: var(--bg2); border-bottom: 1px solid var(--border); }
+    .tab-btn {
+      flex: 1; padding: 10px 0; border: none; background: transparent;
+      color: var(--muted); font-weight: 700; font-size: 12px; cursor: pointer;
+      border-bottom: 2px solid transparent; font-family: var(--sans); transition: all 0.15s;
+    }
+    .tab-btn.active { background: var(--bg3); color: var(--amber); border-bottom-color: var(--amber); }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      background: var(--bg2); padding: 9px 14px; border-bottom: 1px solid var(--border);
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .search-input {
+      flex: 1; min-width: 180px; background: var(--bg3); border: 1px solid var(--border2);
+      border-radius: 8px; padding: 8px 12px; font-size: 12px; outline: none;
+      color: var(--text); font-family: var(--sans);
+    }
+    .search-input:focus { border-color: var(--amber); }
+    .chip {
+      padding: 7px 12px; border-radius: 7px; border: none; cursor: pointer;
+      font-weight: 700; font-size: 11px; font-family: var(--sans); transition: all 0.15s;
+      background: var(--bg3); color: var(--muted);
+    }
+    .chip.active-all { background: var(--bg4); color: var(--text); }
+    .chip.active-moto { background: var(--blue); color: #fff; }
+    .chip.active-atv  { background: var(--amber); color: #07090f; }
+    .chip.active-multi { background: var(--purple); color: #fff; }
+    .chip.active-green { background: var(--green); color: #fff; }
+
+    /* ── MAPA ── */
+    .rua-block {
+      margin: 10px 12px 0; background: var(--bg2); border-radius: 10px;
+      border: 1px solid var(--border); overflow: hidden;
+    }
+    .rua-block.multi-sel { border-color: rgba(168,85,247,0.5); }
+    .rua-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px; background: var(--bg3);
+      border-bottom: 1px solid rgba(245,158,11,0.2);
+    }
+    .rua-header.collapsed { border-bottom: none; }
+    .rua-left { display: flex; align-items: center; gap: 10px; flex: 1; flex-wrap: wrap; }
+    .rua-name { font-family: var(--mono); font-size: 14px; font-weight: 800; color: var(--amber); cursor: pointer; letter-spacing: 0.06em; }
+    .badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+    .badge-green { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+    .badge-red   { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+    .badge-purple{ background: rgba(168,85,247,0.15); color: #d8b4fe; border: 1px solid rgba(168,85,247,0.4); }
+    .chevron { color: var(--muted); font-size: 12px; cursor: pointer; transition: transform 0.2s; }
+    .chevron.collapsed { transform: rotate(-90deg); }
+
+    /* tabela */
+    .table-wrap { overflow-x: auto; padding: 10px 10px 14px; }
+    table { border-collapse: collapse; }
+    .th { padding: 5px 6px; border: 1px solid var(--border); text-align: center; font-weight: 700; font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; user-select: none; }
+    .th-grp { font-size: 11px; font-weight: 800; color: var(--amber); letter-spacing: 0.08em; border-left: 2px solid var(--border2); }
+    .th-sub { background: #0d1828; color: var(--muted2); font-size: 8px; padding: 3px 5px; font-weight: 600; }
+    .th-sub-chassi { color: rgba(251,191,36,0.7); }
+    .td { padding: 5px 7px; border: 1px solid var(--border); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+    .td-chassi { padding: 5px 10px; border: 1px solid var(--border); font-size: 12px; font-family: var(--mono); font-weight: 700; letter-spacing: 0.06em; white-space: nowrap; overflow: visible; color: var(--muted); }
+    .td-num { width: 28px; text-align: center; font-weight: 700; color: var(--muted2); background: #07090f; border: none; border-right: 1px solid var(--border); font-family: var(--mono); font-size: 9px; }
+
+    /* células de vaga */
+    .cell-livre    { background: rgba(34,197,94,0.07); }
+    .cell-ocupado  { background: rgba(239,68,68,0.10); }
+    .cell-selected { background: rgba(245,158,11,0.16); }
+    .cell-multi    { background: rgba(168,85,247,0.16); }
+    .cell-highlight { outline: 2px solid rgba(245,158,11,0.55); outline-offset: -2px; }
+
+    /* ── PAINEL INFERIOR ── */
+    .bottom-panel {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 90;
+      background: var(--bg2); border-top: 2px solid rgba(245,158,11,0.35);
+      padding: 12px 18px 20px; box-shadow: 0 -4px 24px rgba(0,0,0,0.6);
+    }
+    .panel-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .panel-id { font-family: var(--mono); font-weight: 900; font-size: 18px; color: var(--amber); }
+    .panel-info { display: flex; gap: 14px; margin-bottom: 10px; font-size: 12px; flex-wrap: wrap; background: var(--bg3); border-radius: 7px; padding: 8px 12px; border: 1px solid var(--border); align-items: center; }
+    .chassi-pill { font-family: var(--mono); font-size: 14px; font-weight: 700; color: #fbbf24; background: rgba(251,191,36,0.09); border-radius: 5px; padding: 3px 9px; border: 1px solid rgba(251,191,36,0.2); letter-spacing: 0.06em; }
+    .panel-actions { display: flex; gap: 8px; }
+    .btn-entrada { flex: 1; padding: 11px; border: none; border-radius: 8px; cursor: pointer; background: var(--amber); color: #07090f; font-size: 13px; font-weight: 800; font-family: var(--sans); }
+    .btn-saida   { flex: 1; padding: 11px; border: none; border-radius: 8px; cursor: pointer; background: var(--green); color: #fff; font-size: 13px; font-weight: 800; font-family: var(--sans); }
+    .btn-close   { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+      display: flex; align-items: center; justify-content: center; z-index: 200; padding: 16px;
+    }
+    .modal-box {
+      background: var(--bg2); border-radius: 14px; padding: 24px;
+      width: 100%; max-width: 420px; box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+    }
+    .modal-box.amber { border: 2px solid rgba(245,158,11,0.5); }
+    .modal-box.green { border: 2px solid rgba(34,197,94,0.4); }
+    .modal-box.purple{ border: 2px solid rgba(168,85,247,0.5); }
+    .modal-box.blue  { border: 2px solid rgba(59,130,246,0.4); }
+    .modal-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 3px; }
+    .modal-sub   { font-size: 11px; color: var(--muted); margin-bottom: 18px; }
+    .modal-sub span { font-family: var(--mono); color: var(--amber); font-weight: 700; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+    .btn-cancel { background: var(--bg3); color: var(--muted); border: 1px solid var(--border2); border-radius: 8px; padding: 11px 16px; font-weight: 600; font-size: 12px; cursor: pointer; font-family: var(--sans); }
+
+    /* form modal */
+    .form-label { display: block; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+    .form-row { margin-bottom: 14px; }
+    .tipo-btns { display: flex; gap: 8px; }
+    .tipo-btn { flex: 1; padding: 10px 8px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 13px; font-family: var(--sans); border: 2px solid var(--border2); background: var(--bg3); color: var(--muted); transition: all 0.15s; }
+    .tipo-btn.sel-moto { border-color: var(--blue); background: var(--blue); color: #fff; }
+    .tipo-btn.sel-atv  { border-color: var(--amber); background: var(--amber); color: #07090f; }
+    select.form-sel {
+      width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 7px;
+      padding: 9px 12px; color: var(--text); font-size: 13px; cursor: pointer;
+      appearance: none; font-family: var(--sans); outline: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+    }
+    select.form-sel:disabled { color: var(--muted2); cursor: not-allowed; background-color: #0d1420; }
+    .chassi-input {
+      width: 100%; background: var(--bg3); border: 2px solid rgba(251,191,36,0.35);
+      border-radius: 7px; padding: 11px 14px; color: #fbbf24; font-size: 16px;
+      font-weight: 700; font-family: var(--mono); outline: none; letter-spacing: 0.1em;
+    }
+    .chassi-count { margin-top: 4px; text-align: right; font-size: 10px; }
+    .resumo { background: var(--bg3); border-radius: 8px; padding: 10px 12px; margin-bottom: 4px; border: 1px solid var(--border); display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; align-items: center; }
+    .btn-confirm-entry { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 800; font-size: 13px; font-family: var(--sans); cursor: pointer; }
+    .btn-confirm-entry.ready { background: var(--amber); color: #07090f; }
+    .btn-confirm-entry.not-ready { background: var(--bg3); color: var(--muted); cursor: not-allowed; }
+
+    /* ── HISTÓRICO ── */
+    .hist-toolbar { background: var(--bg2); padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    .hist-chips { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+    .hist-search-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hist-count { margin-top: 5px; font-size: 10px; color: var(--muted); }
+    .hist-list { padding: 14px; }
+    .hist-card {
+      background: var(--bg3); border-radius: 8px; padding: 11px 14px;
+      margin-bottom: 8px; border: 1px solid var(--border);
+    }
+    .hist-card.entrada { border-color: rgba(245,158,11,0.25); }
+    .hist-card.saida   { border-color: rgba(34,197,94,0.25); }
+    .hist-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .hist-tags { display: flex; align-items: center; gap: 6px; }
+    .action-badge { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; border-radius: 4px; padding: 1px 8px; }
+    .action-entrada { background: rgba(245,158,11,0.1); color: var(--amber); }
+    .action-saida   { background: rgba(34,197,94,0.1); color: var(--green); }
+    .tipo-tag { font-size: 9px; color: var(--muted); background: var(--bg2); border: 1px solid var(--border2); border-radius: 3px; padding: 1px 6px; }
+    .hist-loc { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--muted); }
+    .hist-modelo { font-size: 12px; color: var(--text); font-weight: 600; margin-bottom: 2px; }
+    .hist-cor { font-size: 11px; color: var(--muted); }
+    .chassi-badge { margin-top: 5px; display: inline-flex; align-items: center; gap: 6px; background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); border-radius: 5px; padding: 4px 10px; }
+    .chassi-lbl { font-size: 10px; color: var(--muted); }
+    .chassi-val { font-size: 14px; color: #fbbf24; font-family: var(--mono); font-weight: 700; letter-spacing: 0.06em; }
+    .hist-time { font-size: 10px; color: var(--muted2); margin-top: 4px; }
+
+    /* ── ADMIN ── */
+    .admin-wrap { padding: 20px 14px; max-width: 600px; margin: 0 auto; }
+    .admin-title { font-size: 18px; font-weight: 800; margin-bottom: 20px; }
+    .admin-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .admin-card-title { font-size: 13px; font-weight: 700; color: var(--amber); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .user-list-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .user-list-item:last-child { border-bottom: none; }
+    .user-info { display: flex; flex-direction: column; gap: 2px; }
+    .user-email-txt { font-size: 13px; color: var(--text); }
+    .user-role-txt { font-size: 11px; color: var(--muted); }
+    .btn-delete { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; font-family: var(--sans); }
+    .add-user-form { display: flex; flex-direction: column; gap: 12px; }
+    .form-row-inline { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 180px; }
+    .admin-err { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #fca5a5; margin-top: 8px; }
+    .admin-ok  { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #4ade80; margin-top: 8px; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; left: 50%; transform: translateX(-50%);
+      border-radius: 9px; padding: 10px 22px; font-weight: 700; font-size: 13px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5); z-index: 300; white-space: nowrap;
+      font-family: var(--sans); pointer-events: none;
+    }
+    .toast-ok  { background: var(--amber2); color: #fff; }
+    .toast-ok2 { background: var(--green2); color: #fff; }
+    .toast-err { background: var(--red2); color: #fff; }
+
+    /* ── LOADING ── */
+    .loading-screen {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 16px; background: var(--bg);
+    }
+    .loading-spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--amber); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-txt { font-size: 13px; color: var(--muted); }
+
+    /* misc */
+    .content-area { flex: 1; overflow-y: auto; }
+    .empty-msg { text-align: center; color: var(--muted); font-size: 13px; padding: 40px 0; }
+    .multi-info { font-size: 11px; color: var(--purple); font-weight: 600; }
+    .check-box { width: 22px; height: 22px; border-radius: 5px; border: 2px solid var(--purple); background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; flex-shrink: 0; }
+    .check-box.checked { background: var(--purple); }
+  </style>
+</head>
+<body>
+<div id="root">
+  <div class="loading-screen">
+    <div class="loading-spinner"></div>
+    <div class="loading-txt">Iniciando...</div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection,
+         addDoc, query, orderBy, limit, where, getDocs, deleteDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ══════════════════════════════════════════════════
+// 🔧  SUBSTITUA ABAIXO COM SUAS CREDENCIAIS FIREBASE
+// ══════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey:            "AIzaSyCWPPhs6fpi04q4GAptwKuvjJnK21oveU",
+  authDomain:        "ckd-manaus-estoque-manaus.firebaseapp.com",
+  projectId:         "ckd-manaus-estoque-manaus",
+  storageBucket:     "ckd-manaus-estoque-manaus.firebasestorage.app",
+  messagingSenderId: "292692252424",
+  appId:             "1:292692252424:web:155d096e96bfc4e8ddbebd",
+};
+// ══════════════════════════════════════════════════
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── Catálogo ──────────────────────────────────────
+const CATALOG = {
+  "Motocicletas":[
+    {modelo:"CF400-8H IBEX450",          cores:["Zephyr Blue","Tundra Grey"]},
+    {modelo:"CF400-10H 450CL-C",         cores:["Nebula Black","Bordeaux Red"]},
+    {modelo:"CF400-10AH 450CL-C BOBBER", cores:["Nebula Black","Ivory White"]},
+    {modelo:"CF700-9AH IBEX700",         cores:["Nebula Black","Nebula White"]},
+  ],
+  "ATVs":[
+    {modelo:"CF400AU-LA GOES",  cores:["Ghost Grey","Pear Black"]},
+    {modelo:"CF400AZ-3L 450L",  cores:["Hunter Green","Lava Orange"]},
+    {modelo:"CF500AU-9L 520L",  cores:["Magma Red","Nebula Black"]},
+    {modelo:"CF600AU-3LA 625",  cores:["Tundra Grey","Hunter Green","Nebula Black"]},
+    {modelo:"CF1000AZ-2",       cores:["Zircon Black","Lava Orange"]},
+    {modelo:"CF1000AZ-2 LX",    cores:["Granite Ridge","Royal Blue"]},
+    {modelo:"CF1000AZ-3 MV",    cores:["Granite Ridge","Royal Blue"]},
+  ],
+};
+const TIPOS  = Object.keys(CATALOG);
+const TI     = {"Motocicletas":"🏍️","ATVs":"🚙"};
+const NUM_RUAS=7, VPR=84, LINHAS=6, GRUPOS=VPR/LINHAS, TOTAL=NUM_RUAS*VPR;
+const LOGO_B64 = "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";
+
+// ── Estado global ─────────────────────────────────
+let STATE = {
+  user: null, role: null, userEmail: null,
+  locs: {}, hist: [],
+  sel: null, modal: null,
+  form: {tipo:"",modelo:"",cor:"",chassi:""},
+  search: "", fTipo: "Todos", tab: "mapa",
+  toast: null, toastTimer: null,
+  collapsed: {},
+  multiMode: false, multiSel: new Set(),
+  hAcao:"Todos", hTipo:"Todos", hMod:"", hData:"", hChassi:"",
+  adminUsers: [],
+  adminErr: "", adminOk: "", adminForm: {email:"",senha:"",role:"operador"},
+  unsubLocs: null, unsubHist: null,
+};
+
+function makeLocations(){
+  const m={};
+  for(let r=1;r<=NUM_RUAS;r++) for(let v=1;v<=VPR;v++){
+    const id=`R${String(r).padStart(2,"0")}-${String(v).padStart(3,"0")}`;
+    m[id]={id,rua:r,vaga:v,status:"livre",item:null};
+  }
+  return m;
+}
+
+// ── Firestore listeners ───────────────────────────
+async function startListeners(){
+  // Vagas — documento único
+  STATE.unsubLocs = onSnapshot(doc(db,"estoque","vagas"), snap=>{
+    const base = makeLocations();
+    if(snap.exists()){
+      const data = snap.data();
+      Object.keys(data).forEach(id=>{ if(base[id]) base[id]=data[id]; });
+    }
+    STATE.locs = base;
+    render();
+  });
+  // Histórico — coleção, últimos 500 ordenados por timestamp desc
+  const q = query(collection(db,"historico"), orderBy("ts","desc"), limit(500));
+  STATE.unsubHist = onSnapshot(q, snap=>{
+    STATE.hist = snap.docs.map(d=>({id:d.id,...d.data()}));
+    render();
+  });
+}
+
+function stopListeners(){
+  if(STATE.unsubLocs) STATE.unsubLocs();
+  if(STATE.unsubHist) STATE.unsubHist();
+}
+
+// ── Firestore writes ──────────────────────────────
+async function saveVaga(id, data){
+  const ref = doc(db,"estoque","vagas");
+  await setDoc(ref, {[id]: data}, {merge:true});
+}
+
+async function addHistorico(entry){
+  await addDoc(collection(db,"historico"),{
+    ...entry,
+    ts: serverTimestamp(),
+    user: STATE.userEmail,
+  });
+}
+
+// ── Ações ─────────────────────────────────────────
+async function alocar(){
+  const f = STATE.form;
+  if(!f.tipo||!f.modelo||!f.cor) return;
+  const id = STATE.sel;
+  const now = new Date().toLocaleString("pt-BR");
+  const item = {tipo:f.tipo,modelo:f.modelo,cor:f.cor,chassi:f.chassi,alocadoEm:now};
+  await saveVaga(id,{id,rua:Number(id.split("-")[0].slice(1)),vaga:Number(id.split("-")[1]),status:"bloqueado",item});
+  await addHistorico({loc:id,action:"Entrada",tipo:f.tipo,modelo:f.modelo,cor:f.cor,chassi:f.chassi,time:now});
+  showToast(`Entrada em ${id}!`,"ok");
+  STATE.modal=null; STATE.sel=null; render();
+}
+
+async function baixa(){
+  const id = STATE.sel;
+  const loc = STATE.locs[id];
+  const it  = loc?.item;
+  const now = new Date().toLocaleString("pt-BR");
+  await saveVaga(id,{...loc,status:"livre",item:null});
+  await addHistorico({loc:id,action:"Saída",tipo:it?.tipo||"",modelo:it?.modelo||"",cor:it?.cor||"",chassi:it?.chassi||"",time:now});
+  showToast(`${id} liberado!`,"ok2");
+  STATE.modal=null; STATE.sel=null; render();
+}
+
+async function confirmarMulti(){
+  const now = new Date().toLocaleString("pt-BR");
+  const ids = [...STATE.multiSel];
+  await Promise.all(ids.map(async id=>{
+    const loc = STATE.locs[id];
+    const it  = loc?.item;
+    await saveVaga(id,{...loc,status:"livre",item:null});
+    await addHistorico({loc:id,action:"Saída",tipo:it?.tipo||"",modelo:it?.modelo||"",cor:it?.cor||"",chassi:it?.chassi||"",time:now});
+  }));
+  showToast(`✅ ${ids.length} vaga(s) liberada(s)!`,"ok2");
+  STATE.multiSel=new Set(); STATE.multiMode=false; STATE.modal=null; render();
+}
+
+// ── Toast ─────────────────────────────────────────
+function showToast(msg, t="ok"){
+  if(STATE.toastTimer) clearTimeout(STATE.toastTimer);
+  STATE.toast={msg,t};
+  STATE.toastTimer = setTimeout(()=>{ STATE.toast=null; render(); },3000);
+  render();
+}
+
+// ── Admin: carregar usuários ──────────────────────
+async function loadAdminUsers(){
+  try {
+    const snap = await getDocs(collection(db,"users"));
+    STATE.adminUsers = snap.docs.map(d=>({uid:d.id,...d.data()}));
+    render();
+  } catch(e){ console.error(e); }
+}
+
+async function addUser(){
+  const {email,senha,role} = STATE.adminForm;
+  if(!email||!senha) return;
+  STATE.adminErr=""; STATE.adminOk="";
+  try {
+    // Cria o usuário via REST (sem deslogar o admin atual)
+    const apiKey = firebaseConfig.apiKey;
+    const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`,{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({email,password:senha,returnSecureToken:true}),
+    });
+    const data = await res.json();
+    if(data.error){ STATE.adminErr = data.error.message; render(); return; }
+    // Salva perfil no Firestore
+    await setDoc(doc(db,"users",data.localId),{email,role});
+    STATE.adminOk = `Usuário ${email} criado com perfil ${role}.`;
+    STATE.adminForm = {email:"",senha:"",role:"operador"};
+    await loadAdminUsers();
+  } catch(e){ STATE.adminErr = e.message; render(); }
+}
+
+async function deleteUser(uid, email){
+  if(!confirm(`Remover acesso de ${email}?`)) return;
+  await deleteDoc(doc(db,"users",uid));
+  await loadAdminUsers();
+}
+
+// ── Auth ──────────────────────────────────────────
+async function login(email, senha){
+  try {
+    await signInWithEmailAndPassword(auth, email, senha);
+  } catch(e){
+    return e.code === "auth/invalid-credential" || e.code === "auth/user-not-found"
+      ? "Email ou senha incorretos."
+      : "Erro ao entrar. Tente novamente.";
+  }
+}
+
+onAuthStateChanged(auth, async user=>{
+  if(user){
+    STATE.user = user.uid;
+    STATE.userEmail = user.email;
+    // Busca o perfil no Firestore
+    try {
+      const snap = await getDoc(doc(db,"users",user.uid));
+      STATE.role = snap.exists() ? snap.data().role : "operador";
+    } catch(e){ STATE.role = "operador"; }
+    startListeners();
+    if(STATE.role==="admin") loadAdminUsers();
+  } else {
+    STATE.user = null; STATE.role = null; STATE.userEmail = null;
+    stopListeners();
+    STATE.locs = {}; STATE.hist = [];
+    render();
+  }
+});
+
+// ══════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════
+function render(){
+  const root = document.getElementById("root");
+  if(!STATE.user){ root.innerHTML = renderLogin(); bindLogin(); return; }
+  root.innerHTML = renderApp();
+  bindApp();
+}
+
+// ── LOGIN ─────────────────────────────────────────
+function renderLogin(){
+  return `
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <img src="data:image/png;base64,${LOGO_B64}" alt="Logo" onerror="this.style.display='none'"/>
+        <div>
+          <div class="login-logo-text">Estoque Fábrica Manaus</div>
+          <div class="login-logo-sub">CFMOTO / ATV Management</div>
+        </div>
+      </div>
+      <div class="login-title">Entrar</div>
+      <div class="login-sub">Acesso restrito a usuários autorizados.</div>
+      <div id="login-err" style="display:none" class="login-err"></div>
+      <div class="field">
+        <label>Email</label>
+        <input id="l-email" type="email" placeholder="seu@email.com" autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label>Senha</label>
+        <input id="l-senha" type="password" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+      <button id="btn-login" class="btn-primary">Entrar</button>
+    </div>
+  </div>`;
+}
+
+function bindLogin(){
+  const btn = document.getElementById("btn-login");
+  const doLogin = async()=>{
+    const email = document.getElementById("l-email").value.trim();
+    const senha = document.getElementById("l-senha").value;
+    if(!email||!senha) return;
+    btn.disabled=true; btn.textContent="Entrando...";
+    const err = await login(email,senha);
+    if(err){
+      const el=document.getElementById("login-err");
+      el.style.display="block"; el.textContent=err;
+      btn.disabled=false; btn.textContent="Entrar";
+    }
+  };
+  btn.addEventListener("click", doLogin);
+  document.getElementById("l-senha").addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
+}
+
+// ── APP ───────────────────────────────────────────
+function renderApp(){
+  const {tab, modal, toast, sel, locs, multiMode, multiSel, role, userEmail} = STATE;
+  const selLoc = sel ? locs[sel] : null;
+  const stats = {
+    total: Object.keys(locs).length||TOTAL,
+    livre: Object.values(locs).filter(l=>l.status==="livre").length,
+    bloqueado: Object.values(locs).filter(l=>l.status==="bloqueado").length,
+  };
+
+  let content = "";
+  if(tab==="mapa")       content = renderMapa();
+  else if(tab==="historico") content = renderHistorico();
+  else if(tab==="admin") content = renderAdmin();
+
+  const bottomPanel = (!multiMode&&selLoc) ? renderPanel(selLoc) : "";
+  const modalHtml   = modal ? renderModal(selLoc) : "";
+  const toastHtml   = toast ? `<div class="toast toast-${toast.t}" style="bottom:${(!multiMode&&selLoc)?195:30}px">${toast.msg}</div>` : "";
+
+  const tabs = [["mapa","📋 Mapa"],["historico","🕓 Histórico"]];
+  if(role==="admin") tabs.push(["admin","⚙️ Usuários"]);
+
+  return `
+  <div style="display:flex;flex-direction:column;min-height:100vh">
+    <div class="header">
+      <div class="header-left">
+        <div class="header-logo"><img src="data:image/png;base64,${LOGO_B64}" alt="Logo" onerror="this.style.display='none'"/></div>
+        <div>
+          <div class="header-title">Estoque Fábrica Manaus</div>
+          <div class="header-sub">${NUM_RUAS} RUAS · ${VPR} VAGAS/RUA · ${TOTAL} TOTAL</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="stat-block"><div class="stat-val" style="color:#94a3b8">${stats.total}</div><div class="stat-lbl">Total</div></div>
+        <div class="stat-block"><div class="stat-val" style="color:#4ade80">${stats.livre}</div><div class="stat-lbl">Livres</div></div>
+        <div class="stat-block"><div class="stat-val" style="color:#f87171">${stats.bloqueado}</div><div class="stat-lbl">Ocupadas</div></div>
+        <div class="user-badge">
+          <span class="user-badge-role ${role==='admin'?'role-admin':'role-operador'}">${role==="admin"?"Admin":"Operador"}</span>
+          <span class="user-email">${userEmail}</span>
+          <button class="btn-logout" id="btn-logout">Sair</button>
+        </div>
+      </div>
+    </div>
+    <div class="tabs">
+      ${tabs.map(([t,l])=>`<button class="tab-btn ${tab===t?'active':''}" data-tab="${t}">${l}</button>`).join("")}
+    </div>
+    ${tab==="mapa"||tab==="historico" ? renderToolbar() : ""}
+    <div class="content-area" style="padding-bottom:${(!multiMode&&selLoc)?175:20}px">
+      ${content}
+    </div>
+    ${bottomPanel}
+    ${modalHtml}
+    ${toastHtml}
+  </div>`;
+}
+
+function renderToolbar(){
+  const {tab, search, fTipo, multiMode, multiSel, hAcao, hTipo, hMod, hData, hChassi, hist} = STATE;
+  const histFilt = filterHist();
+  if(tab==="mapa") return `
+  <div class="toolbar">
+    <input class="search-input" id="search-inp" value="${escHtml(search)}" placeholder="🔍  Buscar vaga, modelo, cor ou chassi..."/>
+    ${["Todos","Motocicletas","ATVs"].map(t=>`
+      <button class="chip ${fTipo===t?t==="Motocicletas"?"active-moto":t==="ATVs"?"active-atv":"active-all":""}" data-ftipo="${t}">
+        ${t==="Motocicletas"?"🏍️ Motos":t==="ATVs"?"🚙 ATVs":"Todos"}
+      </button>`).join("")}
+    <button class="chip ${multiMode?"active-multi":""}" id="btn-mm">${multiMode?"✕  Cancelar":"☑  Liberar Múltiplas"}</button>
+    ${multiMode&&multiSel.size>0?`<button class="chip active-green" id="btn-multi-confirm">✓ Liberar ${multiSel.size}</button>`:""}
+    ${multiMode?`<span class="multi-info">${multiSel.size===0?"Clique nas vagas ocupadas":`${multiSel.size} sel.`}</span>`:""}
+  </div>`;
+
+  return `
+  <div class="hist-toolbar">
+    <div class="hist-chips">
+      ${["Todos","Entrada","Saída"].map(a=>`
+        <button class="chip ${hAcao===a?a==="Entrada"?"active-atv":a==="Saída"?"active-green":"active-all":""}" data-hacao="${a}">
+          ${a==="Entrada"?"🔒 Entrada":a==="Saída"?"✅ Saída":"Todos"}
+        </button>`).join("")}
+      ${["Todos","Motocicletas","ATVs"].map(t=>`
+        <button class="chip ${hTipo===t?t==="Motocicletas"?"active-moto":t==="ATVs"?"active-atv":"active-all":""}" data-htipo="${t}">
+          ${t==="Motocicletas"?"🏍️ Motos":t==="ATVs"?"🚙 ATVs":"Tipo: Todos"}
+        </button>`).join("")}
+      ${(hAcao!=="Todos"||hTipo!=="Todos"||hMod||hData||hChassi)?`<button class="chip" id="btn-hlimpar">✕ Limpar</button>`:""}
+    </div>
+    <div class="hist-search-row">
+      <input class="search-input" id="h-mod" value="${escHtml(hMod)}" placeholder="🔍 Filtrar por modelo..." style="flex:1;min-width:140px"/>
+      <input class="search-input" id="h-chassi" value="${escHtml(hChassi)}" placeholder="🔑 Chassi (parcial, ex: 0115)" style="flex:1;min-width:160px"/>
+      <input class="search-input" id="h-data" value="${escHtml(hData)}" placeholder="📅 Data (ex: 07/05)" style="flex:1;min-width:130px"/>
+    </div>
+    <div class="hist-count">${histFilt.length} registro${histFilt.length!==1?"s":""} encontrado${histFilt.length!==1?"s":""}</div>
+  </div>`;
+}
+
+function filterHist(){
+  const {hist,hAcao,hTipo,hMod,hData,hChassi} = STATE;
+  return hist.filter(h=>{
+    if(hAcao!=="Todos"&&h.action!==hAcao) return false;
+    if(hTipo!=="Todos"&&h.tipo!==hTipo)   return false;
+    if(hMod&&!h.modelo?.toLowerCase().includes(hMod.toLowerCase())) return false;
+    if(hData&&!h.time?.includes(hData))    return false;
+    if(hChassi&&!h.chassi?.toLowerCase().includes(hChassi.toLowerCase())) return false;
+    return true;
+  });
+}
+
+function renderMapa(){
+  const {locs,search,fTipo,multiMode,multiSel,sel,collapsed} = STATE;
+  const sl = search.toLowerCase();
+  const hits = l=>!sl||l.id?.toLowerCase().includes(sl)||l.item?.modelo?.toLowerCase().includes(sl)||l.item?.cor?.toLowerCase().includes(sl)||l.item?.chassi?.toLowerCase().includes(sl)||l.item?.tipo?.toLowerCase().includes(sl);
+  const ruaMatch = r=>!sl&&fTipo==="Todos"?true:Object.values(locs).filter(l=>l.rua===r).some(l=>{
+    if(fTipo!=="Todos"&&l.status==="bloqueado"&&l.item?.tipo!==fTipo) return false;
+    return hits(l);
+  });
+
+  // agrupa por rua/vaga
+  const grouped={};
+  Object.values(locs).forEach(l=>{if(!grouped[l.rua])grouped[l.rua]={};grouped[l.rua][l.vaga]=l;});
+
+  let html="";
+  for(let r=1;r<=NUM_RUAS;r++){
+    if(!ruaMatch(r)) continue;
+    const rl=Object.values(locs).filter(l=>l.rua===r);
+    const livres=rl.filter(l=>l.status==="livre").length;
+    const ocup=rl.filter(l=>l.status==="bloqueado").length;
+    const isC=collapsed[r];
+    const rmc=rl.filter(l=>multiSel.has(l.id)).length;
+    const rAs=ocup>0&&rl.filter(l=>l.status==="bloqueado").every(l=>multiSel.has(l.id));
+
+    html+=`<div class="rua-block${rmc>0?" multi-sel":""}" style="margin:10px 12px 0">
+      <div class="rua-header${isC?" collapsed":""}">
+        <div class="rua-left">
+          ${multiMode&&ocup>0?`<div class="check-box${rAs?" checked":""}" data-selrua="${r}">${rAs?"✓":""}</div>`:""}
+          <span class="rua-name" data-collapserua="${r}">RUA ${String(r).padStart(2,"0")}</span>
+          <span class="badge badge-green">${livres} livres</span>
+          <span class="badge badge-red">${ocup} ocupadas</span>
+          ${rmc>0?`<span class="badge badge-purple">☑ ${rmc} sel.</span>`:""}
+        </div>
+        <span class="chevron${isC?" collapsed":""}" data-collapserua="${r}">▼</span>
+      </div>`;
+
+    if(!isC){
+      html+=`<div class="table-wrap"><table><thead><tr>
+        <th class="th" style="width:28px;background:#07090f;color:#07090f;border:none"></th>
+        ${Array.from({length:GRUPOS},(_,g)=>`<th class="th th-grp" colspan="4" style="background:${g%2===0?"#0e1e30":"#0a1520"}">${String.fromCharCode(65+g)}</th>`).join("")}
+      </tr><tr>
+        <th class="th" style="width:28px;background:#07090f;color:#07090f;border:none;font-size:8px">Nº</th>
+        ${Array.from({length:GRUPOS},(_,g)=>`
+          <th class="th th-sub" style="width:52px;border-left:2px solid #2d3f55">Vaga</th>
+          <th class="th th-sub" style="width:110px">Modelo</th>
+          <th class="th th-sub" style="width:90px">Cor</th>
+          <th class="th th-sub th-sub-chassi" style="min-width:170px">Chassi</th>`).join("")}
+      </tr></thead><tbody>`;
+
+      for(let li=0;li<LINHAS;li++){
+        const linha=LINHAS-li;
+        html+=`<tr style="background:${linha%2===0?"rgba(255,255,255,0.015)":"transparent"}">
+          <td class="td td-num">${linha}</td>`;
+        for(let g=0;g<GRUPOS;g++){
+          const vn=g*LINHAS+linha;
+          const loc=grouped[r]?.[vn];
+          if(!loc){
+            html+=`<td class="td" style="width:52px;border-left:2px solid #1e2d40;color:#1e2d40">—</td>
+              <td class="td" style="width:110px"></td>
+              <td class="td" style="width:90px"></td>
+              <td class="td-chassi" style="min-width:170px"></td>`;
+            continue;
+          }
+          const iS=!multiMode&&loc.id===sel;
+          const iM=multiMode&&multiSel.has(loc.id);
+          const iH=sl&&hits(loc);
+          let cellCls="";
+          if(iM) cellCls="cell-multi";
+          else if(iS) cellCls="cell-selected";
+          else if(loc.status==="bloqueado") cellCls="cell-ocupado";
+          else cellCls="cell-livre";
+          if(iH&&!iS&&!iM) cellCls+=" cell-highlight";
+          const codeColor=iM?"#d8b4fe":iS?"#fbbf24":loc.status==="bloqueado"?"#ef4444":"#22c55e";
+          const txtColor=iM?"#d8b4fe":iS?"#fbbf24":loc.status==="bloqueado"?"#fca5a5":"#6ee7b7";
+          const bdr=iM?"#a855f7":iS?"#f59e0b":loc.status==="bloqueado"?"rgba(239,68,68,0.4)":"rgba(34,197,94,0.25)";
+          const cursor=multiMode?(loc.status==="bloqueado"?"pointer":"default"):"pointer";
+          const da=`data-locid="${loc.id}"`;
+
+          html+=`<td class="td ${cellCls}" ${da} style="width:52px;border-left:2px solid ${iM?"#a855f7":iS?"#f59e0b":g%2===0?"#253347":"#1e2d40"};font-family:var(--mono);font-weight:800;font-size:11px;color:${codeColor};overflow:visible;cursor:${cursor}">
+              ${iM?"☑":loc.status==="bloqueado"?"🔒":""} ${String.fromCharCode(65+g)}${String(linha).padStart(2,"0")}
+            </td>
+            <td class="td ${cellCls}" ${da} style="width:110px;color:${txtColor};border-bottom:1px solid ${bdr};cursor:${cursor}">${escHtml(loc.item?.modelo||"")}</td>
+            <td class="td ${cellCls}" ${da} style="width:90px;color:${txtColor};border-bottom:1px solid ${bdr};cursor:${cursor}">${escHtml(loc.item?.cor||"")}</td>
+            <td class="td-chassi ${cellCls}" ${da} style="min-width:170px;background:${loc.item?.chassi?"rgba(251,191,36,0.07)":"inherit"};color:${loc.item?.chassi?"#fbbf24":txtColor};border-bottom:1px solid ${bdr};border-right:1px solid ${bdr};cursor:${cursor}">${escHtml(loc.item?.chassi||"")}</td>`;
+        }
+        html+=`</tr>`;
+      }
+      html+=`</tbody></table></div>`;
+    }
+    html+=`</div>`;
+  }
+  return html||`<div class="empty-msg">Nenhuma vaga encontrada.</div>`;
+}
+
+function renderHistorico(){
+  const histFilt = filterHist();
+  if(!histFilt.length) return `<div class="hist-list"><div class="empty-msg">${STATE.hist.length===0?"Nenhum registro ainda":"Nenhum registro corresponde aos filtros"}</div></div>`;
+  return `<div class="hist-list">${histFilt.map(h=>`
+    <div class="hist-card ${h.action==="Entrada"?"entrada":"saida"}">
+      <div class="hist-top">
+        <div class="hist-tags">
+          <span class="action-badge ${h.action==="Entrada"?"action-entrada":"action-saida"}">${h.action}</span>
+          ${h.tipo?`<span class="tipo-tag">${TI[h.tipo]||""} ${h.tipo}</span>`:""}
+        </div>
+        <span class="hist-loc">${h.loc}</span>
+      </div>
+      <div class="hist-modelo">${escHtml(h.modelo||"")}</div>
+      ${h.cor?`<div class="hist-cor">Cor: ${escHtml(h.cor)}</div>`:""}
+      ${h.chassi?`<div class="chassi-badge"><span class="chassi-lbl">Chassi:</span><span class="chassi-val">${escHtml(h.chassi)}</span></div>`:""}
+      <div class="hist-time">📅 ${h.time||""}${h.user?` · ${h.user}`:""}</div>
+    </div>`).join("")}</div>`;
+}
+
+function renderAdmin(){
+  const {adminUsers,adminErr,adminOk,adminForm} = STATE;
+  return `<div class="admin-wrap">
+    <div class="admin-title">⚙️ Gerenciar Usuários</div>
+    <div class="admin-card">
+      <div class="admin-card-title">Adicionar Usuário</div>
+      <div class="add-user-form">
+        <div class="form-row-inline">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="search-input" id="adm-email" type="email" value="${escHtml(adminForm.email)}" placeholder="novo@email.com"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Senha</label>
+            <input class="search-input" id="adm-senha" type="password" value="${escHtml(adminForm.senha)}" placeholder="mínimo 6 caracteres"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Perfil</label>
+          <select class="form-sel" id="adm-role">
+            <option value="operador" ${adminForm.role==="operador"?"selected":""}>Operador — Pode dar entrada e saída</option>
+            <option value="admin" ${adminForm.role==="admin"?"selected":""}>Admin — Acesso total</option>
+          </select>
+        </div>
+        <button class="btn-primary" id="btn-add-user" style="margin-top:4px">+ Adicionar Usuário</button>
+        ${adminErr?`<div class="admin-err">${adminErr}</div>`:""}
+        ${adminOk?`<div class="admin-ok">${adminOk}</div>`:""}
+      </div>
+    </div>
+    <div class="admin-card">
+      <div class="admin-card-title">Usuários Cadastrados (${adminUsers.length})</div>
+      ${adminUsers.length===0?`<div style="color:var(--muted);font-size:13px">Nenhum usuário cadastrado ainda.</div>`:""}
+      ${adminUsers.map(u=>`
+        <div class="user-list-item">
+          <div class="user-info">
+            <div class="user-email-txt">${escHtml(u.email)}</div>
+            <div class="user-role-txt">${u.role==="admin"?"Admin":"Operador"}</div>
+          </div>
+          <button class="btn-delete" data-deluid="${u.uid}" data-delemail="${escHtml(u.email)}">Remover</button>
+        </div>`).join("")}
+    </div>
+  </div>`;
+}
+
+function renderPanel(selLoc){
+  const it = selLoc.item;
+  return `<div class="bottom-panel">
+    <div class="panel-top">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="panel-id">${selLoc.id}</span>
+        ${it?.tipo?`<span class="badge" style="background:var(--bg3);border:1px solid var(--border2);color:var(--muted)">${TI[it.tipo]} ${it.tipo}</span>`:""}
+        <span class="badge ${selLoc.status==="bloqueado"?"badge-red":"badge-green"}">${selLoc.status==="bloqueado"?"🔒 Ocupado":"✓ Livre"}</span>
+      </div>
+      <button class="btn-close" id="btn-panel-close">✕</button>
+    </div>
+    ${it?`<div class="panel-info">
+      <span><span style="color:var(--muted)">Modelo: </span><span style="font-weight:600">${escHtml(it.modelo)}</span></span>
+      ${it.cor?`<span><span style="color:var(--muted)">Cor: </span>${escHtml(it.cor)}</span>`:""}
+      ${it.chassi?`<span class="chassi-pill">🔑 ${escHtml(it.chassi)}</span>`:""}
+    </div>`:""}
+    <div class="panel-actions">
+      ${selLoc.status==="livre"?`<button class="btn-entrada" id="btn-entrada">🔒 Dar Entrada</button>`:""}
+      ${selLoc.status==="bloqueado"?`<button class="btn-saida" id="btn-saida">✓ Dar Saída</button>`:""}
+    </div>
+  </div>`;
+}
+
+function renderModal(selLoc){
+  const {modal,form,multiSel,locs} = STATE;
+  const ready = form.tipo&&form.modelo&&form.cor;
+
+  if(modal==="alocar") return `<div class="modal-overlay"><div class="modal-box amber">
+    <div class="modal-title">Dar Entrada</div>
+    <div class="modal-sub">Vaga: <span>${selLoc?.id}</span></div>
+    <div class="form-row"><label class="form-label">Tipo de Veículo *</label>
+      <div class="tipo-btns">
+        ${TIPOS.map(t=>`<button class="tipo-btn ${form.tipo===t?t==="Motocicletas"?"sel-moto":"sel-atv":""}" data-tipo="${t}">${TI[t]} ${t}</button>`).join("")}
+      </div>
+    </div>
+    <div class="form-row"><label class="form-label">Modelo *</label>
+      <select class="form-sel" id="sel-modelo" ${!form.tipo?"disabled":""}>
+        <option value="">${form.tipo?"Selecione o modelo...":"Selecione o tipo primeiro"}</option>
+        ${(form.tipo?CATALOG[form.tipo].map(m=>m.modelo):[]).map(m=>`<option ${form.modelo===m?"selected":""}>${m}</option>`).join("")}
+      </select>
+    </div>
+    <div class="form-row"><label class="form-label">Cor *</label>
+      <select class="form-sel" id="sel-cor" ${!form.modelo?"disabled":""}>
+        <option value="">${form.modelo?"Selecione a cor...":"Selecione o modelo primeiro"}</option>
+        ${(form.tipo&&form.modelo?CATALOG[form.tipo].find(m=>m.modelo===form.modelo)?.cores||[]:[]).map(c=>`<option ${form.cor===c?"selected":""}>${c}</option>`).join("")}
+      </select>
+    </div>
+    <div class="form-row"><label class="form-label">Chassi (17 dígitos)</label>
+      <input class="chassi-input" id="inp-chassi" value="${escHtml(form.chassi)}" placeholder="Ex: 9C6KE1234567890A" maxlength="17"/>
+      <div class="chassi-count" style="color:${form.chassi.length===17?"#4ade80":"var(--muted)"}">${form.chassi.length}/17 ${form.chassi.length===17?"✓ completo":""}</div>
+    </div>
+    ${ready?`<div class="resumo">
+      <span style="color:var(--muted)">Resumo:</span>
+      <span style="color:${form.tipo==="Motocicletas"?"var(--blue)":"var(--amber)"};font-weight:700">${TI[form.tipo]} ${form.tipo}</span>
+      <span style="font-weight:600">${escHtml(form.modelo)}</span>
+      <span style="color:var(--muted)">· ${escHtml(form.cor)}</span>
+      ${form.chassi?`<span style="color:#fbbf24;font-family:var(--mono);font-weight:700">🔑 ${escHtml(form.chassi)}</span>`:""}
+    </div>`:""}
+    <div class="modal-actions">
+      <button class="btn-confirm-entry ${ready?"ready":"not-ready"}" id="btn-alocar" ${ready?"":"disabled"}>🔒 Confirmar Entrada</button>
+      <button class="btn-cancel" id="btn-modal-cancel">Cancelar</button>
+    </div>
+  </div></div>`;
+
+  if(modal==="baixa") return `<div class="modal-overlay"><div class="modal-box green">
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-size:38px;margin-bottom:8px">✅</div>
+      <div class="modal-title">Confirmar Saída</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:5px">Vaga <span style="font-family:var(--mono);color:var(--amber);font-weight:700">${selLoc?.id}</span> será liberada.</div>
+    </div>
+    ${selLoc?.item?`<div style="background:var(--bg3);border-radius:8px;padding:11px 14px;margin-bottom:16px;border:1px solid var(--border)">
+      ${selLoc.item.tipo?`<div style="font-size:10px;color:var(--muted);margin-bottom:4px">${TI[selLoc.item.tipo]} ${selLoc.item.tipo}</div>`:""}
+      <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:6px">${escHtml(selLoc.item.modelo)}</div>
+      ${selLoc.item.cor?`<div style="font-size:12px;color:var(--muted)">Cor: ${escHtml(selLoc.item.cor)}</div>`:""}
+      ${selLoc.item.chassi?`<div class="chassi-badge" style="margin-top:8px"><span class="chassi-lbl">Chassi:</span><span class="chassi-val">${escHtml(selLoc.item.chassi)}</span></div>`:""}
+    </div>`:""}
+    <div class="modal-actions">
+      <button class="btn-saida" id="btn-baixa" style="flex:1">Confirmar Saída</button>
+      <button class="btn-cancel" id="btn-modal-cancel">Cancelar</button>
+    </div>
+  </div></div>`;
+
+  if(modal==="multi") return `<div class="modal-overlay"><div class="modal-box purple">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:38px;margin-bottom:8px">📤</div>
+      <div class="modal-title">Liberar ${multiSel.size} vaga${multiSel.size>1?"s":""}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">As vagas serão marcadas como <b style="color:var(--green)">livres</b>.</div>
+    </div>
+    <div style="background:var(--bg3);border-radius:8px;padding:10px 12px;margin-bottom:16px;border:1px solid var(--border);max-height:180px;overflow-y:auto">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;font-weight:700">Vagas selecionadas</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        ${[...multiSel].map(id=>{const l=locs[id];return`<div style="font-size:10px;font-weight:700;color:#d8b4fe;background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.35);border-radius:4px;padding:3px 8px">
+          <div style="font-family:var(--mono)">${id}</div>
+          ${l?.item?`<div style="color:var(--muted);font-size:9px">${escHtml(l.item.modelo)}</div>`:""}
+        </div>`;}).join("")}
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-confirm-entry ready" id="btn-multi-ok" style="flex:1">✓ Confirmar Liberação</button>
+      <button class="btn-cancel" id="btn-modal-cancel">Cancelar</button>
+    </div>
+  </div></div>`;
+
+  return "";
+}
+
+// ── Bind events ───────────────────────────────────
+function bindApp(){
+  const {tab,multiMode,multiSel,locs,sel,role} = STATE;
+
+  // logout
+  document.getElementById("btn-logout")?.addEventListener("click",()=>signOut(auth));
+
+  // tabs
+  document.querySelectorAll(".tab-btn").forEach(b=>b.addEventListener("click",()=>{
+    STATE.tab=b.dataset.tab; STATE.sel=null; STATE.modal=null; render();
+  }));
+
+  // ── MAPA ──
+  if(tab==="mapa"){
+    // search
+    document.getElementById("search-inp")?.addEventListener("input",e=>{ STATE.search=e.target.value; render(); });
+    // filtro tipo
+    document.querySelectorAll("[data-ftipo]").forEach(b=>b.addEventListener("click",()=>{ STATE.fTipo=b.dataset.ftipo; render(); }));
+    // multi mode
+    document.getElementById("btn-mm")?.addEventListener("click",()=>{ STATE.multiMode=!STATE.multiMode; STATE.multiSel=new Set(); STATE.sel=null; render(); });
+    document.getElementById("btn-multi-confirm")?.addEventListener("click",()=>{ STATE.modal="multi"; render(); });
+    // collapse rua
+    document.querySelectorAll("[data-collapserua]").forEach(el=>el.addEventListener("click",()=>{
+      const r=Number(el.dataset.collapserua); STATE.collapsed[r]=!STATE.collapsed[r]; render();
+    }));
+    // select all rua (multi)
+    document.querySelectorAll("[data-selrua]").forEach(el=>el.addEventListener("click",()=>{
+      const r=Number(el.dataset.selrua);
+      const ids=Object.values(locs).filter(l=>l.rua===r&&l.status==="bloqueado").map(l=>l.id);
+      const allSel=ids.every(id=>multiSel.has(id));
+      ids.forEach(id=>allSel?multiSel.delete(id):multiSel.add(id));
+      render();
+    }));
+    // click célula
+    document.querySelectorAll("[data-locid]").forEach(td=>td.addEventListener("click",()=>{
+      const id=td.dataset.locid; const loc=locs[id]; if(!loc) return;
+      if(multiMode){
+        if(loc.status!=="bloqueado") return;
+        multiSel.has(id)?multiSel.delete(id):multiSel.add(id); render(); return;
+      }
+      STATE.sel=id===sel?null:id; render();
+    }));
+    // painel inferior
+    document.getElementById("btn-panel-close")?.addEventListener("click",()=>{ STATE.sel=null; render(); });
+    document.getElementById("btn-entrada")?.addEventListener("click",()=>{ STATE.form={tipo:"",modelo:"",cor:"",chassi:""}; STATE.modal="alocar"; render(); });
+    document.getElementById("btn-saida")?.addEventListener("click",()=>{ STATE.modal="baixa"; render(); });
+  }
+
+  // ── HISTÓRICO ──
+  if(tab==="historico"){
+    document.querySelectorAll("[data-hacao]").forEach(b=>b.addEventListener("click",()=>{ STATE.hAcao=b.dataset.hacao; render(); }));
+    document.querySelectorAll("[data-htipo]").forEach(b=>b.addEventListener("click",()=>{ STATE.hTipo=b.dataset.htipo; render(); }));
+    document.getElementById("h-mod")?.addEventListener("input",e=>{ STATE.hMod=e.target.value; render(); });
+    document.getElementById("h-chassi")?.addEventListener("input",e=>{ STATE.hChassi=e.target.value; render(); });
+    document.getElementById("h-data")?.addEventListener("input",e=>{ STATE.hData=e.target.value; render(); });
+    document.getElementById("btn-hlimpar")?.addEventListener("click",()=>{ STATE.hAcao="Todos"; STATE.hTipo="Todos"; STATE.hMod=""; STATE.hData=""; STATE.hChassi=""; render(); });
+  }
+
+  // ── ADMIN ──
+  if(tab==="admin"){
+    document.getElementById("adm-email")?.addEventListener("input",e=>{ STATE.adminForm.email=e.target.value; });
+    document.getElementById("adm-senha")?.addEventListener("input",e=>{ STATE.adminForm.senha=e.target.value; });
+    document.getElementById("adm-role")?.addEventListener("change",e=>{ STATE.adminForm.role=e.target.value; });
+    document.getElementById("btn-add-user")?.addEventListener("click",addUser);
+    document.querySelectorAll("[data-deluid]").forEach(b=>b.addEventListener("click",()=>deleteUser(b.dataset.deluid,b.dataset.delemail)));
+  }
+
+  // ── MODAL ──
+  document.getElementById("btn-modal-cancel")?.addEventListener("click",()=>{ STATE.modal=null; render(); });
+  // modal alocar
+  document.querySelectorAll("[data-tipo]").forEach(b=>b.addEventListener("click",()=>{ STATE.form={...STATE.form,tipo:b.dataset.tipo,modelo:"",cor:""}; render(); }));
+  document.getElementById("sel-modelo")?.addEventListener("change",e=>{ STATE.form={...STATE.form,modelo:e.target.value,cor:""}; render(); });
+  document.getElementById("sel-cor")?.addEventListener("change",e=>{ STATE.form={...STATE.form,cor:e.target.value}; render(); });
+  document.getElementById("inp-chassi")?.addEventListener("input",e=>{ STATE.form={...STATE.form,chassi:e.target.value.toUpperCase().slice(0,17)}; render(); });
+  document.getElementById("btn-alocar")?.addEventListener("click",alocar);
+  document.getElementById("btn-baixa")?.addEventListener("click",baixa);
+  document.getElementById("btn-multi-ok")?.addEventListener("click",confirmarMulti);
+}
+
+function escHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+</script>
+</body>
+</html>
