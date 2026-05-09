@@ -904,14 +904,14 @@ function renderModal(selLoc){
     </div>
     <div class="form-row"><label class="form-label">Chassi (17 dígitos)</label>
       <input class="chassi-input" id="inp-chassi" value="${escHtml(form.chassi)}" placeholder="Ex: 9C6KE1234567890A" maxlength="17"/>
-      <div class="chassi-count" style="color:${form.chassi.length===17?"#4ade80":"var(--muted)"}">${form.chassi.length}/17 ${form.chassi.length===17?"✓ completo":""}</div>
+      <div id="chassi-count" class="chassi-count" style="color:${form.chassi.length===17?"#4ade80":"var(--muted)"}">${form.chassi.length}/17 ${form.chassi.length===17?"✓ completo":""}</div>
     </div>
     ${ready?`<div class="resumo">
       <span style="color:var(--muted)">Resumo:</span>
       <span style="color:${form.tipo==="Motocicletas"?"var(--blue)":"var(--amber)"};font-weight:700">${TI[form.tipo]} ${form.tipo}</span>
       <span style="font-weight:600">${escHtml(form.modelo)}</span>
       <span style="color:var(--muted)">· ${escHtml(form.cor)}</span>
-      ${form.chassi?`<span style="color:#fbbf24;font-family:var(--mono);font-weight:700">🔑 ${escHtml(form.chassi)}</span>`:""}
+      <span id="resumo-chassi" style="color:#fbbf24;font-family:var(--mono);font-weight:700">${form.chassi?"🔑 "+escHtml(form.chassi):""}</span>
     </div>`:""}
     <div class="modal-actions">
       <button class="btn-confirm-entry ${ready?"ready":"not-ready"}" id="btn-alocar" ${ready?"":"disabled"}>🔒 Confirmar Entrada</button>
@@ -1034,7 +1034,7 @@ function bindApp(){
   document.querySelectorAll("[data-tipo]").forEach(b=>b.addEventListener("click",()=>{ STATE.form={...STATE.form,tipo:b.dataset.tipo,modelo:"",cor:""}; render(); }));
   document.getElementById("sel-modelo")?.addEventListener("change",e=>{ STATE.form={...STATE.form,modelo:e.target.value,cor:""}; render(); });
   document.getElementById("sel-cor")?.addEventListener("change",e=>{ STATE.form={...STATE.form,cor:e.target.value}; render(); });
-  document.getElementById("inp-chassi")?.addEventListener("input",e=>{ STATE.form={...STATE.form,chassi:e.target.value.toUpperCase().slice(0,17)}; render(); });
+  document.getElementById("inp-chassi")?.addEventListener("input",e=>{ const val=e.target.value.toUpperCase().slice(0,17); const pos=e.target.selectionStart; e.target.value=val; try{e.target.setSelectionRange(pos,pos);}catch(x){} STATE.form={...STATE.form,chassi:val}; const cnt=document.getElementById("chassi-count"); if(cnt){cnt.textContent=val.length+"/17 "+(val.length===17?"✓ completo":""); cnt.style.color=val.length===17?"#4ade80":"var(--muted)";} const rc=document.getElementById("resumo-chassi"); if(rc) rc.textContent=val?"🔑 "+val:""; });
   document.getElementById("btn-alocar")?.addEventListener("click",alocar);
   document.getElementById("btn-baixa")?.addEventListener("click",baixa);
   document.getElementById("btn-multi-ok")?.addEventListener("click",confirmarMulti);
