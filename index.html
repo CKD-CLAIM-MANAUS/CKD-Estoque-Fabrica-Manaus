@@ -91,8 +91,58 @@
       background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px;
     }
     .user-badge-role { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
-    .role-admin { background: rgba(245,158,11,0.15); color: var(--amber); }
-    .role-operador { background: rgba(59,130,246,0.15); color: var(--blue); }
+    .role-admin     { background: rgba(245,158,11,0.15); color: var(--amber); }
+    .role-operador  { background: rgba(59,130,246,0.15);  color: var(--blue); }
+    .role-validador { background: rgba(34,197,94,0.15);   color: var(--green); }
+    .role-espectador{ background: rgba(100,116,139,0.2);  color: #94a3b8; }
+
+    /* ── Scanner fullscreen ── */
+    #scanner-fullscreen {
+      display: none;
+      position: fixed; inset: 0; z-index: 500;
+      background: #000;
+      flex-direction: column;
+    }
+    #scanner-fullscreen.active { display: flex; }
+    #scanner-fs-video {
+      width: 100%; flex: 1; object-fit: cover; display: block;
+    }
+    #scanner-fs-top {
+      position: absolute; top: 0; left: 0; right: 0;
+      padding: 14px 16px 10px;
+      background: linear-gradient(rgba(0,0,0,0.75), transparent);
+      display: flex; align-items: center; gap: 10px;
+    }
+    #scanner-fs-bottom {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 14px 16px 28px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.9));
+    }
+    #scanner-fs-result {
+      font-family: var(--mono); font-size: 18px; font-weight: 800;
+      color: #94a3b8; letter-spacing: 0.08em;
+      text-align: center; margin-bottom: 12px;
+      min-height: 28px; word-break: break-all;
+    }
+    #scanner-fs-confirm {
+      width: 100%; padding: 14px; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 800; font-family: var(--sans);
+      background: #1e293b; color: #475569; cursor: not-allowed;
+      transition: all 0.2s;
+    }
+    #scanner-fs-confirm.ready {
+      background: linear-gradient(135deg,#22c55e,#16a34a);
+      color: #fff; cursor: pointer;
+    }
+    .scanner-crosshair {
+      position: absolute; inset: 0; pointer-events: none;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .scanner-crosshair-box {
+      width: 75%; max-width: 340px; height: 80px;
+      border: 2.5px solid #fbbf24; border-radius: 6px;
+      box-shadow: 0 0 0 2000px rgba(0,0,0,0.5);
+    }
     .user-email { font-size: 11px; color: var(--muted); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .btn-logout { background: transparent; border: 1px solid var(--border2); border-radius: 6px; padding: 5px 10px; color: var(--muted); font-size: 11px; cursor: pointer; font-family: var(--sans); }
     .btn-logout:hover { color: var(--text); border-color: var(--muted); }
@@ -307,6 +357,25 @@
 </div>
 
 <!-- Firebase SDK -->
+<!-- ── Scanner Tela Cheia ── -->
+<div id="scanner-fullscreen">
+  <video id="scanner-fs-video" playsinline autoplay muted></video>
+  <div class="scanner-crosshair">
+    <div class="scanner-crosshair-box"></div>
+  </div>
+  <div id="scanner-fs-top">
+    <div style="flex:1">
+      <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;margin-bottom:3px">Lendo código de barras</div>
+      <div id="scan-live-val" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#94a3b8;letter-spacing:0.05em">Aponte para o código do chassi</div>
+    </div>
+    <button id="btn-scan-cancel" style="background:rgba(0,0,0,0.6);border:1px solid #475569;color:#e2e8f0;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;font-family:var(--sans);font-weight:600">✕ Fechar</button>
+  </div>
+  <div id="scanner-fs-bottom">
+    <div id="scanner-fs-result">Aguardando leitura...</div>
+    <button id="btn-scan-ok" class="scanner-fs-confirm" disabled>✓ Confirmar Chassi</button>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
@@ -615,7 +684,7 @@ function renderApp(){
   const toastHtml   = toast ? `<div class="toast toast-${toast.t}" style="bottom:${(!multiMode&&selLoc)?195:30}px">${toast.msg}</div>` : "";
 
   const tabs = [["mapa","📋 Mapa"],["historico","🕓 Histórico"]];
-  if(role==="admin") tabs.push(["admin","⚙️ Usuários"]);
+  if(canAdmin()) tabs.push(["admin","⚙️ Usuários"]);
 
   return `
   <div style="display:flex;flex-direction:column;min-height:100vh">
@@ -632,7 +701,9 @@ function renderApp(){
         <div class="stat-block"><div class="stat-val" style="color:#4ade80">${stats.livre}</div><div class="stat-lbl">Livres</div></div>
         <div class="stat-block"><div class="stat-val" style="color:#f87171">${stats.bloqueado}</div><div class="stat-lbl">Ocupadas</div></div>
         <div class="user-badge">
-          <span class="user-badge-role ${role==='admin'?'role-admin':'role-operador'}">${role==="admin"?"Admin":"Operador"}</span>
+          <span class="user-badge-role role-${role||'espectador'}">${
+            role==="admin"?"Admin":role==="validador"?"Validador":role==="espectador"?"Espectador":"Operador"
+          }</span>
           <span class="user-email">${userEmail}</span>
           <button class="btn-logout" id="btn-logout">Sair</button>
         </div>
@@ -661,13 +732,15 @@ function renderToolbar(){
       <button class="chip ${fTipo===t?t==="Motocicletas"?"active-moto":t==="ATVs"?"active-atv":"active-all":""}" data-ftipo="${t}">
         ${t==="Motocicletas"?"🏍️ Motos":t==="ATVs"?"🚙 ATVs":"Todos"}
       </button>`).join("")}
-    <button class="chip ${multiMode?"active-multi":""}" id="btn-mm">${multiMode?"✕  Cancelar":"☑  Liberar Múltiplas"}</button>
-    <button class="chip ${STATE.transferMode?"active-atv":""}" id="btn-transfer-toggle">${STATE.transferMode?"✕  Cancelar":"🔄  Transferir"}</button>
-    ${multiMode&&multiSel.size>0?`<button class="chip active-green" id="btn-multi-confirm">✓ Liberar ${multiSel.size}</button>`:""}
-    ${STATE.transferMode&&STATE.transferStep==="select"&&STATE.transferSel.size>0?`<button class="chip active-green" id="btn-transfer-next">→ Escolher Destino (${STATE.transferSel.size})</button>`:""}
-    ${STATE.transferMode&&STATE.transferStep==="destino"?`<span class="multi-info" style="color:var(--amber)">Clique nas vagas de destino (${STATE.transferSel.size} restantes)</span>`:""}
-    ${multiMode?`<span class="multi-info">${multiSel.size===0?"Clique nas vagas ocupadas":`${multiSel.size} sel.`}</span>`:""}
-    ${STATE.transferMode&&STATE.transferStep==="select"?`<span class="multi-info" style="color:var(--amber)">${STATE.transferSel.size===0?"Clique nas vagas a transferir":`${STATE.transferSel.size} sel.`}</span>`:""}
+    ${canAct()?`
+      <button class="chip ${multiMode?"active-multi":""}" id="btn-mm">${multiMode?"✕  Cancelar":"☑  Liberar Múltiplas"}</button>
+      <button class="chip ${STATE.transferMode?"active-atv":""}" id="btn-transfer-toggle">${STATE.transferMode?"✕  Cancelar":"🔄  Transferir"}</button>
+      ${multiMode&&multiSel.size>0?`<button class="chip active-green" id="btn-multi-confirm">✓ Liberar ${multiSel.size}</button>`:""}
+      ${STATE.transferMode&&STATE.transferStep==="select"&&STATE.transferSel.size>0?`<button class="chip active-green" id="btn-transfer-next">→ Escolher Destino (${STATE.transferSel.size})</button>`:""}
+      ${STATE.transferMode&&STATE.transferStep==="destino"?`<span class="multi-info" style="color:var(--amber)">Clique nas vagas de destino (${STATE.transferSel.size} restantes)</span>`:""}
+      ${multiMode?`<span class="multi-info">${multiSel.size===0?"Clique nas vagas ocupadas":`${multiSel.size} sel.`}</span>`:""}
+      ${STATE.transferMode&&STATE.transferStep==="select"?`<span class="multi-info" style="color:var(--amber)">${STATE.transferSel.size===0?"Clique nas vagas a transferir":`${STATE.transferSel.size} sel.`}</span>`:""}
+    `:""}
   </div>`;
 
   return `
@@ -869,8 +942,10 @@ function renderAdmin(){
         <div class="form-group">
           <label class="form-label">Perfil</label>
           <select class="form-sel" id="adm-role">
-            <option value="operador" ${adminForm.role==="operador"?"selected":""}>Operador — Pode dar entrada e saída</option>
-            <option value="admin" ${adminForm.role==="admin"?"selected":""}>Admin — Acesso total</option>
+            <option value="validador"  ${adminForm.role==="validador" ?"selected":""}>Validador  — Entrada, saída e transferência</option>
+            <option value="operador"   ${adminForm.role==="operador"  ?"selected":""}>Operador   — Entrada e saída</option>
+            <option value="espectador" ${adminForm.role==="espectador"?"selected":""}>Espectador — Só visualiza</option>
+            <option value="admin"      ${adminForm.role==="admin"     ?"selected":""}>Admin      — Acesso total</option>
           </select>
         </div>
         <button class="btn-primary" id="btn-add-user" style="margin-top:4px">+ Adicionar Usuário</button>
@@ -885,7 +960,9 @@ function renderAdmin(){
         <div class="user-list-item">
           <div class="user-info">
             <div class="user-email-txt">${escHtml(u.email)}</div>
-            <div class="user-role-txt">${u.role==="admin"?"Admin":"Operador"}</div>
+            <div class="user-role-txt">${
+              u.role==="admin"?"Admin":u.role==="validador"?"Validador":u.role==="espectador"?"Espectador":"Operador"
+            }</div>
           </div>
           <button class="btn-delete" data-deluid="${u.uid}" data-delemail="${escHtml(u.email)}">Remover</button>
         </div>`).join("")}
@@ -910,8 +987,9 @@ function renderPanel(selLoc){
       ${it.chassi?`<span class="chassi-pill">🔑 ${escHtml(it.chassi)}</span>`:""}
     </div>`:""}
     <div class="panel-actions">
-      ${selLoc.status==="livre"?`<button class="btn-entrada" id="btn-entrada">🔒 Dar Entrada</button>`:""}
-      ${selLoc.status==="bloqueado"?`<button class="btn-saida" id="btn-saida">✓ Dar Saída</button>`:""}
+      ${canAct()&&selLoc.status==="livre"?`<button class="btn-entrada" id="btn-entrada">🔒 Dar Entrada</button>`:""}
+      ${canAct()&&selLoc.status==="bloqueado"?`<button class="btn-saida" id="btn-saida">✓ Dar Saída</button>`:""}
+      ${!canAct()?`<div style="font-size:12px;color:var(--muted);text-align:center;width:100%;padding:8px 0">👁 Modo visualização</div>`:""}
     </div>
   </div>`;
 }
@@ -946,23 +1024,6 @@ function renderModal(selLoc){
         <button id="btn-scan-chassi" type="button" title="Escanear código de barras" style="flex-shrink:0;width:46px;height:46px;border-radius:8px;border:2px solid rgba(251,191,36,0.4);background:rgba(251,191,36,0.08);color:#fbbf24;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center">📷</button>
       </div>
       <div id="chassi-count" class="chassi-count" style="color:${form.chassi.length===17?"#4ade80":"var(--muted)"}">${form.chassi.length}/17 ${form.chassi.length===17?"✓ completo":""}</div>
-      <!-- Scanner container -->
-      <div id="scanner-wrap" style="display:none;margin-top:10px;border-radius:10px;overflow:hidden;border:2px solid rgba(251,191,36,0.4);position:relative;background:#000">
-        <video id="scanner-video" style="width:100%;max-height:220px;object-fit:cover;display:block" playsinline autoplay muted></video>
-        <!-- Mira -->
-        <div style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center">
-          <div style="width:80%;height:60px;border:2px solid #fbbf24;border-radius:4px;box-shadow:0 0 0 1000px rgba(0,0,0,0.45)"></div>
-        </div>
-        <!-- Resultado ao vivo -->
-        <div id="scan-live-result" style="position:absolute;top:8px;left:8px;right:56px;background:rgba(0,0,0,0.75);border-radius:6px;padding:5px 10px;min-height:28px">
-          <span id="scan-live-val" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#94a3b8;letter-spacing:0.05em">Aguardando leitura...</span>
-        </div>
-        <button id="btn-scan-cancel" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);border:1px solid #475569;color:#e2e8f0;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;z-index:2">✕</button>
-        <!-- Botão confirmar fixo na parte de baixo -->
-        <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.85));padding:12px 12px 14px;display:flex;gap:8px;align-items:center">
-          <button id="btn-scan-ok" disabled style="flex:1;padding:10px;border:none;border-radius:8px;background:#1e293b;color:#475569;font-weight:800;font-size:13px;cursor:not-allowed;font-family:var(--sans);transition:all 0.2s">✓ Confirmar Chassi</button>
-        </div>
-      </div>
     </div>
     ${ready?`<div class="resumo">
       <span style="color:var(--muted)">Resumo:</span>
@@ -1178,6 +1239,8 @@ function bindApp(){
   document.getElementById("btn-multi-ok")?.addEventListener("click",confirmarMulti);
 }
 
+function canAct(){ return ["admin","validador"].includes(STATE.role); }
+function canAdmin(){ return STATE.role==="admin"; }
 function escHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
 // ── Barcode Scanner ───────────────────────────────
@@ -1185,30 +1248,32 @@ let _scanStream = null;
 let _scanTimer  = null;
 
 async function startScanner(){
-  const wrap  = document.getElementById("scanner-wrap");
-  const video = document.getElementById("scanner-video");
-  if(!wrap||!video) return;
+  const fs    = document.getElementById("scanner-fullscreen");
+  const video = document.getElementById("scanner-fs-video");
+  if(!fs||!video) return;
 
-  wrap.style.display = "block";
-
-  // Reseta o resultado ao vivo
+  // Reseta
   STATE._scannedChassi = "";
   const liveVal = document.getElementById("scan-live-val");
+  const fsResult= document.getElementById("scanner-fs-result");
   const btnOk   = document.getElementById("btn-scan-ok");
-  const status  = liveVal || {textContent:"",style:{}};
-  if(liveVal){ liveVal.textContent="Aguardando leitura..."; liveVal.style.color="#94a3b8"; }
-  if(btnOk){ btnOk.disabled=true; btnOk.style.background="#1e293b"; btnOk.style.color="#475569"; btnOk.style.cursor="not-allowed"; btnOk.textContent="✓ Confirmar Chassi"; }
+  if(liveVal)  { liveVal.textContent="Aponte para o código do chassi"; liveVal.style.color="#94a3b8"; }
+  if(fsResult) { fsResult.textContent="Aguardando leitura..."; fsResult.style.color="#94a3b8"; }
+  if(btnOk)    { btnOk.disabled=true; btnOk.className="scanner-fs-confirm"; btnOk.textContent="✓ Confirmar Chassi"; }
+
+  fs.classList.add("active");
+
+  const status = liveVal || {textContent:"",style:{}};
 
   try {
     _scanStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment", width:{ideal:1280}, height:{ideal:720} }
+      video: { facingMode:"environment", width:{ideal:1920}, height:{ideal:1080} }
     });
     video.srcObject = _scanStream;
     await video.play();
-    status.textContent = "Aponte para o código de barras do chassi";
     _scanLoop(video, status);
   } catch(e){
-    status.textContent = "❌ Câmera não disponível: "+e.message;
+    if(fsResult) { fsResult.textContent="❌ Câmera não disponível: "+e.message; fsResult.style.color="#f87171"; }
     console.error("Scanner error:", e);
   }
 }
@@ -1216,8 +1281,9 @@ async function startScanner(){
 function stopScanner(){
   if(_scanTimer){ clearTimeout(_scanTimer); _scanTimer=null; }
   if(_scanStream){ _scanStream.getTracks().forEach(t=>t.stop()); _scanStream=null; }
-  const wrap = document.getElementById("scanner-wrap");
-  if(wrap) wrap.style.display="none";
+  if(STATE._zxingReader){ try{STATE._zxingReader.reset();}catch(x){} STATE._zxingReader=null; }
+  const fs = document.getElementById("scanner-fullscreen");
+  if(fs) fs.classList.remove("active");
 }
 
 async function _scanLoop(video, status){
@@ -1272,29 +1338,24 @@ function _startZXing(video, status){
 }
 
 function _onChassiScanned(chassi){
-  // Câmera continua aberta — só atualiza o resultado ao vivo
   STATE._scannedChassi = chassi;
 
-  const liveVal = document.getElementById("scan-live-val");
-  const btnOk   = document.getElementById("btn-scan-ok");
+  const liveVal  = document.getElementById("scan-live-val");
+  const fsResult = document.getElementById("scanner-fs-result");
+  const btnOk    = document.getElementById("btn-scan-ok");
 
   if(liveVal){
     liveVal.textContent = chassi;
     liveVal.style.color = chassi.length===17 ? "#4ade80" : "#fbbf24";
   }
-
-  if(btnOk){
-    if(chassi.length > 0){
-      btnOk.disabled = false;
-      btnOk.style.background = chassi.length===17
-        ? "linear-gradient(135deg,#22c55e,#16a34a)"
-        : "linear-gradient(135deg,#f59e0b,#d97706)";
-      btnOk.style.color = "#fff";
-      btnOk.style.cursor = "pointer";
-      btnOk.textContent = chassi.length===17
-        ? "✓ Confirmar Chassi"
-        : `✓ Usar (${chassi.length} dígitos)`;
-    }
+  if(fsResult){
+    fsResult.textContent = chassi;
+    fsResult.style.color = chassi.length===17 ? "#4ade80" : "#fbbf24";
+  }
+  if(btnOk && chassi.length > 0){
+    btnOk.disabled = false;
+    btnOk.className = "scanner-fs-confirm ready";
+    btnOk.textContent = chassi.length===17 ? "✓ Confirmar Chassi" : `✓ Usar (${chassi.length} dígitos)`;
   }
 }
 
