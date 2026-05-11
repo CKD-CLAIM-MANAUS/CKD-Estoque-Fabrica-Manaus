@@ -941,8 +941,20 @@ function renderModal(selLoc){
       </select>
     </div>
     <div class="form-row"><label class="form-label">Chassi (17 dígitos)</label>
-      <input class="chassi-input" id="inp-chassi" value="${escHtml(form.chassi)}" placeholder="Ex: 9C6KE1234567890A" maxlength="17"/>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input class="chassi-input" id="inp-chassi" value="${escHtml(form.chassi)}" placeholder="Ex: 9C6KE1234567890A" maxlength="17" style="flex:1"/>
+        <button id="btn-scan-chassi" type="button" title="Escanear código de barras" style="flex-shrink:0;width:46px;height:46px;border-radius:8px;border:2px solid rgba(251,191,36,0.4);background:rgba(251,191,36,0.08);color:#fbbf24;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center">📷</button>
+      </div>
       <div id="chassi-count" class="chassi-count" style="color:${form.chassi.length===17?"#4ade80":"var(--muted)"}">${form.chassi.length}/17 ${form.chassi.length===17?"✓ completo":""}</div>
+      <!-- Scanner container -->
+      <div id="scanner-wrap" style="display:none;margin-top:10px;border-radius:10px;overflow:hidden;border:2px solid rgba(251,191,36,0.4);position:relative;background:#000">
+        <video id="scanner-video" style="width:100%;max-height:220px;object-fit:cover;display:block" playsinline autoplay muted></video>
+        <div style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center">
+          <div style="width:80%;height:60px;border:2px solid #fbbf24;border-radius:4px;box-shadow:0 0 0 1000px rgba(0,0,0,0.45)"></div>
+        </div>
+        <button id="btn-scan-cancel" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);border:1px solid #475569;color:#e2e8f0;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer">✕ Fechar</button>
+        <div id="scan-status" style="position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:12px;color:#fbbf24;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,0.8)">Aponte para o código de barras do chassi</div>
+      </div>
     </div>
     ${ready?`<div class="resumo">
       <span style="color:var(--muted)">Resumo:</span>
@@ -1144,11 +1156,114 @@ function bindApp(){
   document.getElementById("inp-chassi")?.addEventListener("input",e=>{ const val=e.target.value.toUpperCase().slice(0,17); const pos=e.target.selectionStart; e.target.value=val; try{e.target.setSelectionRange(pos,pos);}catch(x){} STATE.form={...STATE.form,chassi:val}; const cnt=document.getElementById("chassi-count"); if(cnt){cnt.textContent=val.length+"/17 "+(val.length===17?"✓ completo":""); cnt.style.color=val.length===17?"#4ade80":"var(--muted)";} const rc=document.getElementById("resumo-chassi"); if(rc) rc.textContent=val?"🔑 "+val:""; });
   document.getElementById("btn-transfer-ok")?.addEventListener("click",()=>confirmarTransferencia(STATE._transferDestinos||[]));
   document.getElementById("btn-alocar")?.addEventListener("click",alocar);
+
+  // ── Scanner de código de barras ──
+  document.getElementById("btn-scan-chassi")?.addEventListener("click", startScanner);
+  document.getElementById("btn-scan-cancel")?.addEventListener("click", stopScanner);
   document.getElementById("btn-baixa")?.addEventListener("click",baixa);
   document.getElementById("btn-multi-ok")?.addEventListener("click",confirmarMulti);
 }
 
 function escHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+// ── Barcode Scanner ───────────────────────────────
+let _scanStream = null;
+let _scanTimer  = null;
+
+async function startScanner(){
+  const wrap  = document.getElementById("scanner-wrap");
+  const video = document.getElementById("scanner-video");
+  const status= document.getElementById("scan-status");
+  if(!wrap||!video) return;
+
+  wrap.style.display = "block";
+  status.textContent = "Iniciando câmera...";
+
+  try {
+    _scanStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment", width:{ideal:1280}, height:{ideal:720} }
+    });
+    video.srcObject = _scanStream;
+    await video.play();
+    status.textContent = "Aponte para o código de barras do chassi";
+    _scanLoop(video, status);
+  } catch(e){
+    status.textContent = "❌ Câmera não disponível: "+e.message;
+    console.error("Scanner error:", e);
+  }
+}
+
+function stopScanner(){
+  if(_scanTimer){ clearTimeout(_scanTimer); _scanTimer=null; }
+  if(_scanStream){ _scanStream.getTracks().forEach(t=>t.stop()); _scanStream=null; }
+  const wrap = document.getElementById("scanner-wrap");
+  if(wrap) wrap.style.display="none";
+}
+
+async function _scanLoop(video, status){
+  // Usa BarcodeDetector nativo (Chrome Android) se disponível
+  if(typeof BarcodeDetector !== "undefined"){
+    const detector = new BarcodeDetector({formats:["code_39","code_128","codabar","qr_code","data_matrix","pdf417","aztec","ean_13","ean_8","upc_a","upc_e"]});
+    const tryDetect = async()=>{
+      if(!_scanStream) return;
+      try {
+        const codes = await detector.detect(video);
+        if(codes.length > 0){
+          const raw = codes[0].rawValue.toUpperCase().replace(/[^A-Z0-9]/g,"");
+          const chassi = raw.slice(0,17);
+          _onChassiScanned(chassi, status);
+          return;
+        }
+      } catch(e){}
+      _scanTimer = setTimeout(tryDetect, 300);
+    };
+    tryDetect();
+  } else {
+    // Fallback: usa ZXing via CDN
+    status.textContent = "Carregando leitor...";
+    if(!window.ZXing){
+      const s = document.createElement("script");
+      s.src = "https://cdnjs.cloudflare.com/ajax/libs/zxing-js/0.20.0/zxing.min.js";
+      s.onload  = ()=>_startZXing(video, status);
+      s.onerror = ()=>{ status.textContent = "❌ Leitor não disponível neste navegador. Digite o chassi manualmente."; };
+      document.head.appendChild(s);
+    } else {
+      _startZXing(video, status);
+    }
+  }
+}
+
+function _startZXing(video, status){
+  try {
+    const hints = new Map();
+    const codeReader = new ZXing.BrowserMultiFormatReader(hints);
+    STATE._zxingReader = codeReader;
+    status.textContent = "Aponte para o código de barras do chassi";
+    codeReader.decodeFromVideoElement(video, (result, err)=>{
+      if(result){
+        const raw = result.getText().toUpperCase().replace(/[^A-Z0-9]/g,"");
+        const chassi = raw.slice(0,17);
+        _onChassiScanned(chassi, status);
+      }
+    });
+  } catch(e){
+    status.textContent = "❌ Erro ao iniciar leitor: "+e.message;
+  }
+}
+
+function _onChassiScanned(chassi, status){
+  stopScanner();
+  if(STATE._zxingReader){ try{ STATE._zxingReader.reset(); }catch(x){} STATE._zxingReader=null; }
+  // Preenche o campo
+  STATE.form = {...STATE.form, chassi};
+  const inp = document.getElementById("inp-chassi");
+  if(inp){ inp.value = chassi; inp.focus(); }
+  const cnt = document.getElementById("chassi-count");
+  if(cnt){ cnt.textContent = chassi.length+"/17 "+(chassi.length===17?"✓ completo":""); cnt.style.color=chassi.length===17?"#4ade80":"var(--muted)"; }
+  const rc = document.getElementById("resumo-chassi");
+  if(rc) rc.textContent = chassi?"🔑 "+chassi:"";
+  showToast("✅ Chassi lido: "+chassi, "ok2");
+}
 </script>
 </body>
 </html>
