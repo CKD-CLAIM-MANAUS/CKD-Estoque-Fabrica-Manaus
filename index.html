@@ -949,19 +949,18 @@ function renderModal(selLoc){
       <!-- Scanner container -->
       <div id="scanner-wrap" style="display:none;margin-top:10px;border-radius:10px;overflow:hidden;border:2px solid rgba(251,191,36,0.4);position:relative;background:#000">
         <video id="scanner-video" style="width:100%;max-height:220px;object-fit:cover;display:block" playsinline autoplay muted></video>
-        <div id="scan-overlay" style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center">
+        <!-- Mira -->
+        <div style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center">
           <div style="width:80%;height:60px;border:2px solid #fbbf24;border-radius:4px;box-shadow:0 0 0 1000px rgba(0,0,0,0.45)"></div>
         </div>
-        <button id="btn-scan-cancel" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);border:1px solid #475569;color:#e2e8f0;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;z-index:2">✕ Fechar</button>
-        <div id="scan-status" style="position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:12px;color:#fbbf24;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,0.8);padding:0 8px">Aponte para o código de barras do chassi</div>
-      </div>
-      <!-- Confirmação de leitura -->
-      <div id="scan-confirm" style="display:none;margin-top:10px;background:rgba(251,191,36,0.08);border:2px solid rgba(251,191,36,0.5);border-radius:10px;padding:14px 16px">
-        <div style="font-size:11px;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.07em;font-weight:700">Chassi lido — confirme antes de usar:</div>
-        <div id="scan-result-val" style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:800;color:#fbbf24;letter-spacing:0.1em;word-break:break-all;margin-bottom:12px"></div>
-        <div style="display:flex;gap:8px">
-          <button id="btn-scan-ok" style="flex:1;padding:10px;border:none;border-radius:8px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:var(--sans)">✓ Confirmar</button>
-          <button id="btn-scan-retry" style="flex:1;padding:10px;border:none;border-radius:8px;background:rgba(245,158,11,0.15);color:#fbbf24;font-weight:700;font-size:13px;cursor:pointer;border:1px solid rgba(245,158,11,0.4);font-family:var(--sans)">📷 Ler novamente</button>
+        <!-- Resultado ao vivo -->
+        <div id="scan-live-result" style="position:absolute;top:8px;left:8px;right:56px;background:rgba(0,0,0,0.75);border-radius:6px;padding:5px 10px;min-height:28px">
+          <span id="scan-live-val" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#94a3b8;letter-spacing:0.05em">Aguardando leitura...</span>
+        </div>
+        <button id="btn-scan-cancel" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);border:1px solid #475569;color:#e2e8f0;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;z-index:2">✕</button>
+        <!-- Botão confirmar fixo na parte de baixo -->
+        <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.85));padding:12px 12px 14px;display:flex;gap:8px;align-items:center">
+          <button id="btn-scan-ok" disabled style="flex:1;padding:10px;border:none;border-radius:8px;background:#1e293b;color:#475569;font-weight:800;font-size:13px;cursor:not-allowed;font-family:var(--sans);transition:all 0.2s">✓ Confirmar Chassi</button>
         </div>
       </div>
     </div>
@@ -1168,15 +1167,12 @@ function bindApp(){
 
   // ── Scanner de código de barras ──
   document.getElementById("btn-scan-chassi")?.addEventListener("click", startScanner);
-  document.getElementById("btn-scan-cancel")?.addEventListener("click", ()=>{ stopScanner(); document.getElementById("scan-confirm").style.display="none"; });
+  document.getElementById("btn-scan-cancel")?.addEventListener("click", stopScanner);
   document.getElementById("btn-scan-ok")?.addEventListener("click", ()=>{
     const chassi = STATE._scannedChassi||"";
-    document.getElementById("scan-confirm").style.display="none";
+    if(!chassi) return;
+    stopScanner();
     _applyScannedChassi(chassi);
-  });
-  document.getElementById("btn-scan-retry")?.addEventListener("click", ()=>{
-    document.getElementById("scan-confirm").style.display="none";
-    startScanner();
   });
   document.getElementById("btn-baixa")?.addEventListener("click",baixa);
   document.getElementById("btn-multi-ok")?.addEventListener("click",confirmarMulti);
@@ -1191,11 +1187,17 @@ let _scanTimer  = null;
 async function startScanner(){
   const wrap  = document.getElementById("scanner-wrap");
   const video = document.getElementById("scanner-video");
-  const status= document.getElementById("scan-status");
   if(!wrap||!video) return;
 
   wrap.style.display = "block";
-  status.textContent = "Iniciando câmera...";
+
+  // Reseta o resultado ao vivo
+  STATE._scannedChassi = "";
+  const liveVal = document.getElementById("scan-live-val");
+  const btnOk   = document.getElementById("btn-scan-ok");
+  const status  = liveVal || {textContent:"",style:{}};
+  if(liveVal){ liveVal.textContent="Aguardando leitura..."; liveVal.style.color="#94a3b8"; }
+  if(btnOk){ btnOk.disabled=true; btnOk.style.background="#1e293b"; btnOk.style.color="#475569"; btnOk.style.cursor="not-allowed"; btnOk.textContent="✓ Confirmar Chassi"; }
 
   try {
     _scanStream = await navigator.mediaDevices.getUserMedia({
@@ -1229,7 +1231,7 @@ async function _scanLoop(video, status){
         if(codes.length > 0){
           const raw = codes[0].rawValue.toUpperCase().replace(/[^A-Z0-9]/g,"");
           const chassi = raw.slice(0,17);
-          _onChassiScanned(chassi, status);
+          _onChassiScanned(chassi);
           return;
         }
       } catch(e){}
@@ -1261,7 +1263,7 @@ function _startZXing(video, status){
       if(result){
         const raw = result.getText().toUpperCase().replace(/[^A-Z0-9]/g,"");
         const chassi = raw.slice(0,17);
-        _onChassiScanned(chassi, status);
+        _onChassiScanned(chassi);
       }
     });
   } catch(e){
@@ -1269,34 +1271,30 @@ function _startZXing(video, status){
   }
 }
 
-function _onChassiScanned(chassi, status){
-  // Para o scanner mas mantém a stream pausada
-  if(_scanTimer){ clearTimeout(_scanTimer); _scanTimer=null; }
-  if(STATE._zxingReader){ try{ STATE._zxingReader.reset(); }catch(x){} STATE._zxingReader=null; }
-  if(_scanStream){ _scanStream.getTracks().forEach(t=>t.stop()); _scanStream=null; }
-
-  // Esconde o vídeo
-  const wrap = document.getElementById("scanner-wrap");
-  if(wrap) wrap.style.display="none";
-
-  // Salva o resultado e mostra a tela de confirmação
+function _onChassiScanned(chassi){
+  // Câmera continua aberta — só atualiza o resultado ao vivo
   STATE._scannedChassi = chassi;
-  const confirm = document.getElementById("scan-confirm");
-  const val     = document.getElementById("scan-result-val");
-  if(confirm && val){
-    val.textContent = chassi;
-    // Destaca visualmente se tem 17 dígitos
-    val.style.color = chassi.length===17?"#4ade80":"#fbbf24";
-    const hint = confirm.querySelector("div:first-child");
-    if(hint) hint.style.display = chassi.length!==17?"block":"none";
-    // Adiciona aviso se não tiver 17 chars
-    let warn = document.getElementById("scan-warn");
-    if(!warn){ warn=document.createElement("div"); warn.id="scan-warn"; confirm.insertBefore(warn, confirm.children[1]); }
-    warn.style.cssText = "font-size:11px;margin-bottom:8px;";
-    warn.innerHTML = chassi.length===17
-      ? `<span style="color:#4ade80">✓ 17 dígitos — parece correto</span>`
-      : `<span style="color:#f87171">⚠ ${chassi.length} dígitos — verifique antes de confirmar</span>`;
-    confirm.style.display="block";
+
+  const liveVal = document.getElementById("scan-live-val");
+  const btnOk   = document.getElementById("btn-scan-ok");
+
+  if(liveVal){
+    liveVal.textContent = chassi;
+    liveVal.style.color = chassi.length===17 ? "#4ade80" : "#fbbf24";
+  }
+
+  if(btnOk){
+    if(chassi.length > 0){
+      btnOk.disabled = false;
+      btnOk.style.background = chassi.length===17
+        ? "linear-gradient(135deg,#22c55e,#16a34a)"
+        : "linear-gradient(135deg,#f59e0b,#d97706)";
+      btnOk.style.color = "#fff";
+      btnOk.style.cursor = "pointer";
+      btnOk.textContent = chassi.length===17
+        ? "✓ Confirmar Chassi"
+        : `✓ Usar (${chassi.length} dígitos)`;
+    }
   }
 }
 
