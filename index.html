@@ -596,7 +596,8 @@ onAuthStateChanged(auth, async user=>{
     // Busca o perfil no Firestore
     try {
       const snap = await getDoc(doc(db,"users",user.uid));
-      STATE.role = snap.exists() ? snap.data().role : "operador";
+      STATE.role = snap.exists() ? snap.data().role : "espectador";
+      console.log("User role loaded:", STATE.role, "| UID:", user.uid);
     } catch(e){ STATE.role = "operador"; }
     startListeners();
     if(STATE.role==="admin") loadAdminUsers();
@@ -732,18 +733,16 @@ function renderToolbar(){
       <button class="chip ${fTipo===t?t==="Motocicletas"?"active-moto":t==="ATVs"?"active-atv":"active-all":""}" data-ftipo="${t}">
         ${t==="Motocicletas"?"🏍️ Motos":t==="ATVs"?"🚙 ATVs":"Todos"}
       </button>`).join("")}
-    ${canAct()?`
-      ${canSaida()?`
-        <button class="chip ${multiMode?"active-multi":""}" id="btn-mm">${multiMode?"✕  Cancelar":"☑  Liberar Múltiplas"}</button>
-        ${multiMode&&multiSel.size>0?`<button class="chip active-green" id="btn-multi-confirm">✓ Liberar ${multiSel.size}</button>`:""}
-        ${multiMode?`<span class="multi-info">${multiSel.size===0?"Clique nas vagas ocupadas":`${multiSel.size} sel.`}</span>`:""}
-      `:""}
-      ${canTransfer()?`
-        <button class="chip ${STATE.transferMode?"active-atv":""}" id="btn-transfer-toggle">${STATE.transferMode?"✕  Cancelar":"🔄  Transferir"}</button>
-        ${STATE.transferMode&&STATE.transferStep==="select"&&STATE.transferSel.size>0?`<button class="chip active-green" id="btn-transfer-next">→ Escolher Destino (${STATE.transferSel.size})</button>`:""}
-        ${STATE.transferMode&&STATE.transferStep==="destino"?`<span class="multi-info" style="color:var(--amber)">Clique nas vagas de destino (${STATE.transferSel.size} restantes)</span>`:""}
-        ${STATE.transferMode&&STATE.transferStep==="select"?`<span class="multi-info" style="color:var(--amber)">${STATE.transferSel.size===0?"Clique nas vagas a transferir":`${STATE.transferSel.size} sel.`}</span>`:""}
-      `:""}
+    ${(STATE.role==="admin"||STATE.role==="validador")?`
+      <button class="chip ${multiMode?"active-multi":""}" id="btn-mm">${multiMode?"✕  Cancelar":"☑  Liberar Múltiplas"}</button>
+      ${multiMode&&multiSel.size>0?`<button class="chip active-green" id="btn-multi-confirm">✓ Liberar ${multiSel.size}</button>`:""}
+      ${multiMode?`<span class="multi-info">${multiSel.size===0?"Clique nas vagas ocupadas":`${multiSel.size} sel.`}</span>`:""}
+    `:""}
+    ${(STATE.role==="admin"||STATE.role==="validador"||STATE.role==="operador")?`
+      <button class="chip ${STATE.transferMode?"active-atv":""}" id="btn-transfer-toggle">${STATE.transferMode?"✕  Cancelar":"🔄  Transferir"}</button>
+      ${STATE.transferMode&&STATE.transferStep==="select"&&STATE.transferSel.size>0?`<button class="chip active-green" id="btn-transfer-next">→ Escolher Destino (${STATE.transferSel.size})</button>`:""}
+      ${STATE.transferMode&&STATE.transferStep==="destino"?`<span class="multi-info" style="color:var(--amber)">Clique nas vagas de destino (${STATE.transferSel.size} restantes)</span>`:""}
+      ${STATE.transferMode&&STATE.transferStep==="select"?`<span class="multi-info" style="color:var(--amber)">${STATE.transferSel.size===0?"Clique nas vagas a transferir":`${STATE.transferSel.size} sel.`}</span>`:""}
     `:""}
   </div>`;
 
@@ -991,9 +990,12 @@ function renderPanel(selLoc){
       ${it.chassi?`<span class="chassi-pill">🔑 ${escHtml(it.chassi)}</span>`:""}
     </div>`:""}
     <div class="panel-actions">
-      ${canAct()&&selLoc.status==="livre"?`<button class="btn-entrada" id="btn-entrada">🔒 Dar Entrada</button>`:""}
-      ${canSaida()&&selLoc.status==="bloqueado"?`<button class="btn-saida" id="btn-saida">✓ Dar Saída</button>`:""}
-      ${!canAct()?`<div style="font-size:12px;color:var(--muted);text-align:center;width:100%;padding:8px 0">👁 Modo visualização</div>`:""}
+      ${(STATE.role==="admin"||STATE.role==="validador"||STATE.role==="operador")&&selLoc.status==="livre"
+        ?`<button class="btn-entrada" id="btn-entrada">🔒 Dar Entrada</button>`:""}
+      ${(STATE.role==="admin"||STATE.role==="validador")&&selLoc.status==="bloqueado"
+        ?`<button class="btn-saida" id="btn-saida">✓ Dar Saída</button>`:""}
+      ${STATE.role==="espectador"
+        ?`<div style="font-size:12px;color:var(--muted);text-align:center;width:100%;padding:8px 0">👁 Modo visualização</div>`:""}
     </div>
   </div>`;
 }
