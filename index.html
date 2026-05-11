@@ -729,6 +729,8 @@ function updateHistList(){
       <div class="hist-time">📅 ${h.time||""}${h.user?` · ${h.user}`:""}</div>
     </div>`).join("");
 }
+
+function renderMapa(){
   const {locs,search,fTipo,multiMode,multiSel,sel,collapsed} = STATE;
   const sl = search.toLowerCase();
   const hits = l=>!sl||l.id?.toLowerCase().includes(sl)||l.item?.modelo?.toLowerCase().includes(sl)||l.item?.cor?.toLowerCase().includes(sl)||l.item?.chassi?.toLowerCase().includes(sl)||l.item?.tipo?.toLowerCase().includes(sl);
@@ -1023,6 +1025,7 @@ function renderModal(selLoc){
   }
 
   return "";
+}
 
 // ── Transferência ─────────────────────────────────
 async function confirmarTransferencia(destinos){
