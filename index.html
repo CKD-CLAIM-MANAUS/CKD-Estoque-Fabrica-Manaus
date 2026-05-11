@@ -733,13 +733,17 @@ function renderToolbar(){
         ${t==="Motocicletas"?"🏍️ Motos":t==="ATVs"?"🚙 ATVs":"Todos"}
       </button>`).join("")}
     ${canAct()?`
-      <button class="chip ${multiMode?"active-multi":""}" id="btn-mm">${multiMode?"✕  Cancelar":"☑  Liberar Múltiplas"}</button>
-      <button class="chip ${STATE.transferMode?"active-atv":""}" id="btn-transfer-toggle">${STATE.transferMode?"✕  Cancelar":"🔄  Transferir"}</button>
-      ${multiMode&&multiSel.size>0?`<button class="chip active-green" id="btn-multi-confirm">✓ Liberar ${multiSel.size}</button>`:""}
-      ${STATE.transferMode&&STATE.transferStep==="select"&&STATE.transferSel.size>0?`<button class="chip active-green" id="btn-transfer-next">→ Escolher Destino (${STATE.transferSel.size})</button>`:""}
-      ${STATE.transferMode&&STATE.transferStep==="destino"?`<span class="multi-info" style="color:var(--amber)">Clique nas vagas de destino (${STATE.transferSel.size} restantes)</span>`:""}
-      ${multiMode?`<span class="multi-info">${multiSel.size===0?"Clique nas vagas ocupadas":`${multiSel.size} sel.`}</span>`:""}
-      ${STATE.transferMode&&STATE.transferStep==="select"?`<span class="multi-info" style="color:var(--amber)">${STATE.transferSel.size===0?"Clique nas vagas a transferir":`${STATE.transferSel.size} sel.`}</span>`:""}
+      ${canSaida()?`
+        <button class="chip ${multiMode?"active-multi":""}" id="btn-mm">${multiMode?"✕  Cancelar":"☑  Liberar Múltiplas"}</button>
+        ${multiMode&&multiSel.size>0?`<button class="chip active-green" id="btn-multi-confirm">✓ Liberar ${multiSel.size}</button>`:""}
+        ${multiMode?`<span class="multi-info">${multiSel.size===0?"Clique nas vagas ocupadas":`${multiSel.size} sel.`}</span>`:""}
+      `:""}
+      ${canTransfer()?`
+        <button class="chip ${STATE.transferMode?"active-atv":""}" id="btn-transfer-toggle">${STATE.transferMode?"✕  Cancelar":"🔄  Transferir"}</button>
+        ${STATE.transferMode&&STATE.transferStep==="select"&&STATE.transferSel.size>0?`<button class="chip active-green" id="btn-transfer-next">→ Escolher Destino (${STATE.transferSel.size})</button>`:""}
+        ${STATE.transferMode&&STATE.transferStep==="destino"?`<span class="multi-info" style="color:var(--amber)">Clique nas vagas de destino (${STATE.transferSel.size} restantes)</span>`:""}
+        ${STATE.transferMode&&STATE.transferStep==="select"?`<span class="multi-info" style="color:var(--amber)">${STATE.transferSel.size===0?"Clique nas vagas a transferir":`${STATE.transferSel.size} sel.`}</span>`:""}
+      `:""}
     `:""}
   </div>`;
 
@@ -988,7 +992,7 @@ function renderPanel(selLoc){
     </div>`:""}
     <div class="panel-actions">
       ${canAct()&&selLoc.status==="livre"?`<button class="btn-entrada" id="btn-entrada">🔒 Dar Entrada</button>`:""}
-      ${canAct()&&selLoc.status==="bloqueado"?`<button class="btn-saida" id="btn-saida">✓ Dar Saída</button>`:""}
+      ${canSaida()&&selLoc.status==="bloqueado"?`<button class="btn-saida" id="btn-saida">✓ Dar Saída</button>`:""}
       ${!canAct()?`<div style="font-size:12px;color:var(--muted);text-align:center;width:100%;padding:8px 0">👁 Modo visualização</div>`:""}
     </div>
   </div>`;
@@ -1239,7 +1243,9 @@ function bindApp(){
   document.getElementById("btn-multi-ok")?.addEventListener("click",confirmarMulti);
 }
 
-function canAct(){ return ["admin","validador"].includes(STATE.role); }
+function canAct(){ return ["admin","validador","operador"].includes(STATE.role); }
+function canSaida(){ return ["admin","validador"].includes(STATE.role); }
+function canTransfer(){ return ["admin","validador","operador"].includes(STATE.role); }
 function canAdmin(){ return STATE.role==="admin"; }
 function escHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
