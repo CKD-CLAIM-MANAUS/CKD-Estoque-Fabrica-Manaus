@@ -365,6 +365,7 @@ let STATE = {
   toast: null, toastTimer: null,
   collapsed: {},
   multiMode: false, multiSel: new Set(),
+  transferMode: false, transferSel: new Set(), transferStep: "select", // select | destino
   hAcao:"Todos", hTipo:"Todos", hMod:"", hData:"", hChassi:"",
   adminUsers: [],
   adminErr: "", adminOk: "", adminForm: {email:"",senha:"",role:"operador"},
@@ -661,8 +662,12 @@ function renderToolbar(){
         ${t==="Motocicletas"?"🏍️ Motos":t==="ATVs"?"🚙 ATVs":"Todos"}
       </button>`).join("")}
     <button class="chip ${multiMode?"active-multi":""}" id="btn-mm">${multiMode?"✕  Cancelar":"☑  Liberar Múltiplas"}</button>
+    <button class="chip ${STATE.transferMode?"active-atv":""}" id="btn-transfer-toggle">${STATE.transferMode?"✕  Cancelar":"🔄  Transferir"}</button>
     ${multiMode&&multiSel.size>0?`<button class="chip active-green" id="btn-multi-confirm">✓ Liberar ${multiSel.size}</button>`:""}
+    ${STATE.transferMode&&STATE.transferStep==="select"&&STATE.transferSel.size>0?`<button class="chip active-green" id="btn-transfer-next">→ Escolher Destino (${STATE.transferSel.size})</button>`:""}
+    ${STATE.transferMode&&STATE.transferStep==="destino"?`<span class="multi-info" style="color:var(--amber)">Clique nas vagas de destino (${STATE.transferSel.size} restantes)</span>`:""}
     ${multiMode?`<span class="multi-info">${multiSel.size===0?"Clique nas vagas ocupadas":`${multiSel.size} sel.`}</span>`:""}
+    ${STATE.transferMode&&STATE.transferStep==="select"?`<span class="multi-info" style="color:var(--amber)">${STATE.transferSel.size===0?"Clique nas vagas a transferir":`${STATE.transferSel.size} sel.`}</span>`:""}
   </div>`;
 
   return `
@@ -679,11 +684,11 @@ function renderToolbar(){
       ${(hAcao!=="Todos"||hTipo!=="Todos"||hMod||hData||hChassi)?`<button class="chip" id="btn-hlimpar">✕ Limpar</button>`:""}
     </div>
     <div class="hist-search-row">
-      <input class="search-input" id="h-mod" value="${escHtml(hMod)}" placeholder="🔍 Filtrar por modelo..." style="flex:1;min-width:140px"/>
-      <input class="search-input" id="h-chassi" value="${escHtml(hChassi)}" placeholder="🔑 Chassi (parcial, ex: 0115)" style="flex:1;min-width:160px"/>
-      <input class="search-input" id="h-data" value="${escHtml(hData)}" placeholder="📅 Data (ex: 07/05)" style="flex:1;min-width:130px"/>
+      <input class="search-input" id="h-mod" value="${escHtml(hMod)}" placeholder="🔍 Filtrar por modelo..." style="flex:1;min-width:140px" autocomplete="off"/>
+      <input class="search-input" id="h-chassi" value="${escHtml(hChassi)}" placeholder="🔑 Chassi (parcial, ex: 0115)" style="flex:1;min-width:160px" autocomplete="off"/>
+      <input class="search-input" id="h-data" value="${escHtml(hData)}" placeholder="📅 Data (ex: 07/05)" style="flex:1;min-width:130px" autocomplete="off"/>
     </div>
-    <div class="hist-count">${histFilt.length} registro${histFilt.length!==1?"s":""} encontrado${histFilt.length!==1?"s":""}</div>
+    <div id="hist-count" class="hist-count">${histFilt.length} registro${histFilt.length!==1?"s":""} encontrado${histFilt.length!==1?"s":""}</div>
   </div>`;
 }
 
@@ -699,7 +704,31 @@ function filterHist(){
   });
 }
 
-function renderMapa(){
+function updateHistList(){
+  const histFilt = filterHist();
+  const cnt = document.getElementById("hist-count");
+  if(cnt) cnt.textContent = histFilt.length+" registro"+(histFilt.length!==1?"s":"")+" encontrado"+(histFilt.length!==1?"s":"");
+  const list = document.getElementById("hist-list-content");
+  if(!list) return;
+  if(!histFilt.length){
+    list.innerHTML=`<div class="empty-msg">${STATE.hist.length===0?"Nenhum registro ainda":"Nenhum registro corresponde aos filtros"}</div>`;
+    return;
+  }
+  list.innerHTML = histFilt.map(h=>`
+    <div class="hist-card ${h.action==="Entrada"?"entrada":h.action==="Transferência"?"saida":"saida"}">
+      <div class="hist-top">
+        <div class="hist-tags">
+          <span class="action-badge ${h.action==="Entrada"?"action-entrada":"action-saida"}">${h.action}</span>
+          ${h.tipo?`<span class="tipo-tag">${TI[h.tipo]||""} ${h.tipo}</span>`:""}
+        </div>
+        <span class="hist-loc">${h.loc}</span>
+      </div>
+      <div class="hist-modelo">${escHtml(h.modelo||"")}</div>
+      ${h.cor?`<div class="hist-cor">Cor: ${escHtml(h.cor)}</div>`:""}
+      ${h.chassi?`<div class="chassi-badge"><span class="chassi-lbl">Chassi:</span><span class="chassi-val">${escHtml(h.chassi)}</span></div>`:""}
+      <div class="hist-time">📅 ${h.time||""}${h.user?` · ${h.user}`:""}</div>
+    </div>`).join("");
+}
   const {locs,search,fTipo,multiMode,multiSel,sel,collapsed} = STATE;
   const sl = search.toLowerCase();
   const hits = l=>!sl||l.id?.toLowerCase().includes(sl)||l.item?.modelo?.toLowerCase().includes(sl)||l.item?.cor?.toLowerCase().includes(sl)||l.item?.chassi?.toLowerCase().includes(sl)||l.item?.tipo?.toLowerCase().includes(sl);
@@ -761,23 +790,28 @@ function renderMapa(){
               <td class="td-chassi" style="min-width:170px"></td>`;
             continue;
           }
-          const iS=!multiMode&&loc.id===sel;
+          const iS=!multiMode&&!STATE.transferMode&&loc.id===sel;
           const iM=multiMode&&multiSel.has(loc.id);
+          const iT=STATE.transferMode&&STATE.transferStep==="select"&&STATE.transferSel.has(loc.id);
+          const iD=STATE.transferMode&&STATE.transferStep==="destino"&&(STATE._transferDestinos||[]).includes(loc.id);
           const iH=sl&&hits(loc);
           let cellCls="";
-          if(iM) cellCls="cell-multi";
+          if(iM||iT) cellCls="cell-multi";
+          else if(iD) cellCls="cell-selected";
           else if(iS) cellCls="cell-selected";
           else if(loc.status==="bloqueado") cellCls="cell-ocupado";
           else cellCls="cell-livre";
-          if(iH&&!iS&&!iM) cellCls+=" cell-highlight";
-          const codeColor=iM?"#d8b4fe":iS?"#fbbf24":loc.status==="bloqueado"?"#ef4444":"#22c55e";
-          const txtColor=iM?"#d8b4fe":iS?"#fbbf24":loc.status==="bloqueado"?"#fca5a5":"#6ee7b7";
-          const bdr=iM?"#a855f7":iS?"#f59e0b":loc.status==="bloqueado"?"rgba(239,68,68,0.4)":"rgba(34,197,94,0.25)";
-          const cursor=multiMode?(loc.status==="bloqueado"?"pointer":"default"):"pointer";
+          if(iH&&!iS&&!iM&&!iT&&!iD) cellCls+=" cell-highlight";
+          const codeColor=iM||iT?"#d8b4fe":iD?"#4ade80":iS?"#fbbf24":loc.status==="bloqueado"?"#ef4444":"#22c55e";
+          const txtColor=iM||iT?"#d8b4fe":iD?"#4ade80":iS?"#fbbf24":loc.status==="bloqueado"?"#fca5a5":"#6ee7b7";
+          const bdr=iM||iT?"#a855f7":iD?"#22c55e":iS?"#f59e0b":loc.status==="bloqueado"?"rgba(239,68,68,0.4)":"rgba(34,197,94,0.25)";
+          const trCursor=STATE.transferMode?(STATE.transferStep==="select"?loc.status==="bloqueado"?"pointer":"default":loc.status==="livre"?"pointer":"default"):"pointer";
+          const cursor=multiMode?(loc.status==="bloqueado"?"pointer":"default"):trCursor;
           const da=`data-locid="${loc.id}"`;
+          const icon=iM||iT?"☑":iD?"🎯":loc.status==="bloqueado"?"🔒":"";
 
-          html+=`<td class="td ${cellCls}" ${da} style="width:52px;border-left:2px solid ${iM?"#a855f7":iS?"#f59e0b":g%2===0?"#253347":"#1e2d40"};font-family:var(--mono);font-weight:800;font-size:11px;color:${codeColor};overflow:visible;cursor:${cursor}">
-              ${iM?"☑":loc.status==="bloqueado"?"🔒":""} ${String.fromCharCode(65+g)}${String(linha).padStart(2,"0")}
+          html+=`<td class="td ${cellCls}" ${da} style="width:52px;border-left:2px solid ${iM||iT?"#a855f7":iD?"#22c55e":iS?"#f59e0b":g%2===0?"#253347":"#1e2d40"};font-family:var(--mono);font-weight:800;font-size:11px;color:${codeColor};overflow:visible;cursor:${cursor}">
+              ${icon} ${String.fromCharCode(65+g)}${String(linha).padStart(2,"0")}
             </td>
             <td class="td ${cellCls}" ${da} style="width:110px;color:${txtColor};border-bottom:1px solid ${bdr};cursor:${cursor}">${escHtml(loc.item?.modelo||"")}</td>
             <td class="td ${cellCls}" ${da} style="width:90px;color:${txtColor};border-bottom:1px solid ${bdr};cursor:${cursor}">${escHtml(loc.item?.cor||"")}</td>
@@ -794,8 +828,9 @@ function renderMapa(){
 
 function renderHistorico(){
   const histFilt = filterHist();
-  if(!histFilt.length) return `<div class="hist-list"><div class="empty-msg">${STATE.hist.length===0?"Nenhum registro ainda":"Nenhum registro corresponde aos filtros"}</div></div>`;
-  return `<div class="hist-list">${histFilt.map(h=>`
+  const inner = !histFilt.length
+    ? `<div class="empty-msg">${STATE.hist.length===0?"Nenhum registro ainda":"Nenhum registro corresponde aos filtros"}</div>`
+    : histFilt.map(h=>`
     <div class="hist-card ${h.action==="Entrada"?"entrada":"saida"}">
       <div class="hist-top">
         <div class="hist-tags">
@@ -808,7 +843,8 @@ function renderHistorico(){
       ${h.cor?`<div class="hist-cor">Cor: ${escHtml(h.cor)}</div>`:""}
       ${h.chassi?`<div class="chassi-badge"><span class="chassi-lbl">Chassi:</span><span class="chassi-val">${escHtml(h.chassi)}</span></div>`:""}
       <div class="hist-time">📅 ${h.time||""}${h.user?` · ${h.user}`:""}</div>
-    </div>`).join("")}</div>`;
+    </div>`).join("");
+  return `<div class="hist-list" id="hist-list-content">${inner}</div>`;
 }
 
 function renderAdmin(){
@@ -958,7 +994,55 @@ function renderModal(selLoc){
     </div>
   </div></div>`;
 
+  if(modal==="transferir"){
+    const origens=[...STATE.transferSel];
+    const destinos=STATE._transferDestinos||[];
+    return `<div class="modal-overlay"><div class="modal-box amber">
+      <div style="text-align:center;margin-bottom:18px">
+        <div style="font-size:38px;margin-bottom:8px">🔄</div>
+        <div class="modal-title">Confirmar Transferência</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:5px">${origens.length} vaga${origens.length>1?"s":""} serão movidas.</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:10px 12px;margin-bottom:16px;border:1px solid var(--border);max-height:220px;overflow-y:auto">
+        ${origens.map((src,i)=>{
+          const dst=destinos[i];
+          const l=locs[src];
+          return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+            <span style="font-family:var(--mono);font-size:11px;color:#f87171;font-weight:700">${src}</span>
+            <span style="color:var(--amber)">→</span>
+            <span style="font-family:var(--mono);font-size:11px;color:#4ade80;font-weight:700">${dst||"?"}</span>
+            <span style="font-size:10px;color:var(--muted);flex:1">${l?.item?.modelo||""}</span>
+          </div>`;
+        }).join("")}
+      </div>
+      <div class="modal-actions">
+        <button class="btn-confirm-entry ready" id="btn-transfer-ok" style="flex:1">🔄 Confirmar Transferência</button>
+        <button class="btn-cancel" id="btn-modal-cancel">Cancelar</button>
+      </div>
+    </div></div>`;
+  }
+
   return "";
+
+// ── Transferência ─────────────────────────────────
+async function confirmarTransferencia(destinos){
+  const now = new Date().toLocaleString("pt-BR");
+  const origens = [...STATE.transferSel];
+  // origens e destinos têm a mesma ordem
+  await Promise.all(origens.map(async(srcId, i)=>{
+    const dstId = destinos[i];
+    const src = STATE.locs[srcId];
+    const it  = src?.item;
+    if(!it||!dstId) return;
+    // move item para destino
+    const dst = STATE.locs[dstId];
+    await saveVaga(dstId,{...dst, status:"bloqueado", item:{...it}});
+    await saveVaga(srcId,{...src, status:"livre", item:null});
+    await addHistorico({loc:srcId+"→"+dstId, action:"Transferência", tipo:it.tipo||"", modelo:it.modelo||"", cor:it.cor||"", chassi:it.chassi||"", time:now});
+  }));
+  showToast(`🔄 ${origens.length} vaga(s) transferida(s)!`,"ok2");
+  STATE.transferSel=new Set(); STATE.transferMode=false; STATE.transferStep="select"; STATE.modal=null;
+  render();
 }
 
 // ── Bind events ───────────────────────────────────
@@ -980,7 +1064,9 @@ function bindApp(){
     // filtro tipo
     document.querySelectorAll("[data-ftipo]").forEach(b=>b.addEventListener("click",()=>{ STATE.fTipo=b.dataset.ftipo; render(); }));
     // multi mode
-    document.getElementById("btn-mm")?.addEventListener("click",()=>{ STATE.multiMode=!STATE.multiMode; STATE.multiSel=new Set(); STATE.sel=null; render(); });
+    document.getElementById("btn-mm")?.addEventListener("click",()=>{ STATE.multiMode=!STATE.multiMode; STATE.multiSel=new Set(); STATE.transferMode=false; STATE.sel=null; render(); });
+    document.getElementById("btn-transfer-toggle")?.addEventListener("click",()=>{ STATE.transferMode=!STATE.transferMode; STATE.transferSel=new Set(); STATE.transferStep="select"; STATE.multiMode=false; STATE.sel=null; render(); });
+    document.getElementById("btn-transfer-next")?.addEventListener("click",()=>{ STATE.transferStep="destino"; STATE._transferDestinos=[]; render(); });
     document.getElementById("btn-multi-confirm")?.addEventListener("click",()=>{ STATE.modal="multi"; render(); });
     // collapse rua
     document.querySelectorAll("[data-collapserua]").forEach(el=>el.addEventListener("click",()=>{
@@ -997,9 +1083,26 @@ function bindApp(){
     // click célula
     document.querySelectorAll("[data-locid]").forEach(td=>td.addEventListener("click",()=>{
       const id=td.dataset.locid; const loc=locs[id]; if(!loc) return;
+      // Modo liberar múltiplas
       if(multiMode){
         if(loc.status!=="bloqueado") return;
         multiSel.has(id)?multiSel.delete(id):multiSel.add(id); render(); return;
+      }
+      // Modo transferência — passo 1: selecionar origens (ocupadas)
+      if(STATE.transferMode && STATE.transferStep==="select"){
+        if(loc.status!=="bloqueado") return;
+        STATE.transferSel.has(id)?STATE.transferSel.delete(id):STATE.transferSel.add(id); render(); return;
+      }
+      // Modo transferência — passo 2: selecionar destinos (livres)
+      if(STATE.transferMode && STATE.transferStep==="destino"){
+        if(loc.status!=="livre") return;
+        if(!STATE._transferDestinos) STATE._transferDestinos=[];
+        const idx = STATE._transferDestinos.indexOf(id);
+        if(idx>=0) STATE._transferDestinos.splice(idx,1);
+        else if(STATE._transferDestinos.length < STATE.transferSel.size) STATE._transferDestinos.push(id);
+        // Se destinos completos, abre modal
+        if(STATE._transferDestinos.length === STATE.transferSel.size){ STATE.modal="transferir"; }
+        render(); return;
       }
       STATE.sel=id===sel?null:id; render();
     }));
@@ -1013,9 +1116,10 @@ function bindApp(){
   if(tab==="historico"){
     document.querySelectorAll("[data-hacao]").forEach(b=>b.addEventListener("click",()=>{ STATE.hAcao=b.dataset.hacao; render(); }));
     document.querySelectorAll("[data-htipo]").forEach(b=>b.addEventListener("click",()=>{ STATE.hTipo=b.dataset.htipo; render(); }));
-    let _hm,_hc,_hd; document.getElementById("h-mod")?.addEventListener("input",e=>{ STATE.hMod=e.target.value; clearTimeout(_hm); _hm=setTimeout(render,350); });
-    document.getElementById("h-chassi")?.addEventListener("input",e=>{ STATE.hChassi=e.target.value; clearTimeout(_hc); _hc=setTimeout(render,350); });
-    document.getElementById("h-data")?.addEventListener("input",e=>{ STATE.hData=e.target.value; clearTimeout(_hd); _hd=setTimeout(render,350); });
+    // Inputs de texto: atualizam STATE e a lista sem re-render (mantém foco)
+    document.getElementById("h-mod")?.addEventListener("input",e=>{ STATE.hMod=e.target.value; updateHistList(); });
+    document.getElementById("h-chassi")?.addEventListener("input",e=>{ STATE.hChassi=e.target.value; updateHistList(); });
+    document.getElementById("h-data")?.addEventListener("input",e=>{ STATE.hData=e.target.value; updateHistList(); });
     document.getElementById("btn-hlimpar")?.addEventListener("click",()=>{ STATE.hAcao="Todos"; STATE.hTipo="Todos"; STATE.hMod=""; STATE.hData=""; STATE.hChassi=""; render(); });
   }
 
@@ -1035,6 +1139,7 @@ function bindApp(){
   document.getElementById("sel-modelo")?.addEventListener("change",e=>{ STATE.form={...STATE.form,modelo:e.target.value,cor:""}; render(); });
   document.getElementById("sel-cor")?.addEventListener("change",e=>{ STATE.form={...STATE.form,cor:e.target.value}; render(); });
   document.getElementById("inp-chassi")?.addEventListener("input",e=>{ const val=e.target.value.toUpperCase().slice(0,17); const pos=e.target.selectionStart; e.target.value=val; try{e.target.setSelectionRange(pos,pos);}catch(x){} STATE.form={...STATE.form,chassi:val}; const cnt=document.getElementById("chassi-count"); if(cnt){cnt.textContent=val.length+"/17 "+(val.length===17?"✓ completo":""); cnt.style.color=val.length===17?"#4ade80":"var(--muted)";} const rc=document.getElementById("resumo-chassi"); if(rc) rc.textContent=val?"🔑 "+val:""; });
+  document.getElementById("btn-transfer-ok")?.addEventListener("click",()=>confirmarTransferencia(STATE._transferDestinos||[]));
   document.getElementById("btn-alocar")?.addEventListener("click",alocar);
   document.getElementById("btn-baixa")?.addEventListener("click",baixa);
   document.getElementById("btn-multi-ok")?.addEventListener("click",confirmarMulti);
