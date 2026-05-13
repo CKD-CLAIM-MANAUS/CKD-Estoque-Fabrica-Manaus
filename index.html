@@ -391,7 +391,18 @@ const CATALOG = {
 const TIPOS  = Object.keys(CATALOG);
 const TI     = {"Motocicletas":"🏍️","ATVs":"🚙"};
 const NUM_RUAS=7, VPR=84, LINHAS=6, GRUPOS=VPR/LINHAS, TOTAL=NUM_RUAS*VPR;
-const LOGO_B64 = "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";
+// ── Logo CFMOTO ──────────────────────────────────
+// Ícone hexagonal para o header mark
+const LOGO_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="28" height="28">
+  <polygon points="16,2 28,8 28,24 16,30 4,24 4,8" fill="#1D9E75"/>
+  <polyline points="10,16 16,10 22,16 16,22 16,16" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>`;
+// Logo completo para login
+const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 40" width="140" height="32">
+  <polygon points="14,4 26,4 32,14 26,24 14,24 8,14" fill="#1D9E75"/>
+  <polyline points="11,14 17,9 23,14 17,19 17,14" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <text x="40" y="21" font-family="'Inter','Arial Black',Arial,sans-serif" font-weight="800" font-size="17" fill="#f5f5f7" letter-spacing="2">CFMOTO</text>
+</svg>`;
 
 // ── Estado global ─────────────────────────────────
 let STATE = {
@@ -594,7 +605,7 @@ function renderLogin(){
   <div class="login-wrap">
     <div class="login-card">
       <div class="login-logo">
-        <img src="data:image/png;base64,${LOGO_B64}" alt="Logo" onerror="this.style.display='none'"/>
+        <div style="width:48px;height:48px;border-radius:10px;background:var(--bg4);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0">${LOGO_ICON}</div>
         <div>
           <div class="login-logo-text">Estoque Fábrica Manaus</div>
           <div class="login-logo-sub">CFMOTO / ATV Management</div>
@@ -660,7 +671,7 @@ function renderApp(){
   <div style="display:flex;flex-direction:column;min-height:100vh">
     <div class="header">
       <div class="header-left">
-        <div class="header-mark"><img src="data:image/png;base64,${LOGO_B64}" alt="Logo" onerror="this.outerHTML='<span style=\'font-family:var(--mono);font-size:10px;font-weight:700;color:var(--teal);letter-spacing:0.04em\'>EFM</span>'"/></div>
+        <div class="header-mark" style="width:38px;height:38px;border-radius:8px;background:var(--bg4);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0">${LOGO_ICON}</div>
         <div>
           <div class="header-title">Estoque Fábrica Manaus</div>
           <div class="header-sub">CFMOTO · ${NUM_RUAS} ruas · ${TOTAL} vagas</div>
@@ -905,48 +916,91 @@ function renderHistorico(){
 
 function renderAdmin(){
   const {adminUsers,adminErr,adminOk,adminForm} = STATE;
+  const roleLabel = r => ({
+    admin:     "Admin — Acesso total",
+    validador: "Validador — Entrada, saída e transferência",
+    operador:  "Operador — Entrada e transferência",
+    espectador:"Espectador — Somente visualização",
+  }[r] || r);
+  const roleBadgeStyle = r => ({
+    admin:     "background:rgba(200,151,42,0.12);color:#e8b84b",
+    validador: "background:rgba(29,158,117,0.12);color:var(--teal)",
+    operador:  "background:rgba(96,165,250,0.12);color:var(--blue)",
+    espectador:"background:rgba(122,122,130,0.15);color:#9a9aa2",
+  }[r] || "");
+
   return `<div class="admin-wrap">
-    <div class="admin-title">⚙️ Gerenciar Usuários</div>
+    <div class="admin-title">Gerenciar Usuários</div>
+
+    <!-- Adicionar usuário -->
     <div class="admin-card">
       <div class="admin-card-title">Adicionar Usuário</div>
       <div class="add-user-form">
         <div class="form-row-inline">
           <div class="form-group">
             <label class="form-label">Email</label>
-            <input class="search-input" id="adm-email" type="email" value="${escHtml(adminForm.email)}" placeholder="novo@email.com"/>
+            <input class="search-input" id="adm-email" type="email" value="${escHtml(adminForm.email)}" placeholder="novo@email.com" autocomplete="new-password"/>
           </div>
           <div class="form-group">
-            <label class="form-label">Senha</label>
-            <input class="search-input" id="adm-senha" type="password" value="${escHtml(adminForm.senha)}" placeholder="mínimo 6 caracteres"/>
+            <label class="form-label">Senha provisória</label>
+            <input class="search-input" id="adm-senha" type="password" value="${escHtml(adminForm.senha)}" placeholder="mínimo 6 caracteres" autocomplete="new-password"/>
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Perfil</label>
+          <label class="form-label">Perfil de acesso</label>
           <select class="form-sel" id="adm-role">
-            <option value="validador"  ${adminForm.role==="validador" ?"selected":""}>Validador  — Entrada, saída e transferência</option>
-            <option value="operador"   ${adminForm.role==="operador"  ?"selected":""}>Operador   — Entrada e saída</option>
-            <option value="espectador" ${adminForm.role==="espectador"?"selected":""}>Espectador — Só visualiza</option>
-            <option value="admin"      ${adminForm.role==="admin"     ?"selected":""}>Admin      — Acesso total</option>
+            <option value="validador"  ${adminForm.role==="validador" ?"selected":""}>Validador — Entrada, saída e transferência</option>
+            <option value="operador"   ${adminForm.role==="operador"  ?"selected":""}>Operador — Entrada e transferência</option>
+            <option value="espectador" ${adminForm.role==="espectador"?"selected":""}>Espectador — Somente visualização</option>
+            <option value="admin"      ${adminForm.role==="admin"     ?"selected":""}>Admin — Acesso total</option>
           </select>
         </div>
-        <button class="btn-primary" id="btn-add-user" style="margin-top:4px">+ Adicionar Usuário</button>
+
+        <!-- Resumo visual das permissões -->
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+            <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted)">Perfis e permissões</span>
+          </div>
+          ${[
+            ["validador","Validador","Entrada · Saída · Transferência"],
+            ["operador","Operador","Entrada · Transferência"],
+            ["espectador","Espectador","Somente visualização"],
+            ["admin","Admin","Acesso total · Gerencia usuários"],
+          ].map(([role,label,perms])=>`
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border);${adminForm.role===role?"background:rgba(29,158,117,0.04)":""}">
+              <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:4px;min-width:80px;text-align:center;${roleBadgeStyle(role)}">${label}</span>
+              <span style="font-size:12px;color:${adminForm.role===role?"var(--text)":"var(--muted)"};font-weight:${adminForm.role===role?"500":"400"}">${perms}</span>
+              ${adminForm.role===role?`<span style="margin-left:auto;font-size:10px;color:var(--teal)">← selecionado</span>`:""}
+            </div>
+          `).join("")}
+        </div>
+
+        <button class="btn-primary" id="btn-add-user">+ Adicionar Usuário</button>
         ${adminErr?`<div class="admin-err">${adminErr}</div>`:""}
         ${adminOk?`<div class="admin-ok">${adminOk}</div>`:""}
       </div>
     </div>
+
+    <!-- Lista de usuários -->
     <div class="admin-card">
       <div class="admin-card-title">Usuários Cadastrados (${adminUsers.length})</div>
-      ${adminUsers.length===0?`<div style="color:var(--muted);font-size:13px">Nenhum usuário cadastrado ainda.</div>`:""}
-      ${adminUsers.map(u=>`
-        <div class="user-list-item">
-          <div class="user-info">
-            <div class="user-email-txt">${escHtml(u.email)}</div>
-            <div class="user-role-txt">${
-              u.role==="admin"?"Admin":u.role==="validador"?"Validador":u.role==="espectador"?"Espectador":"Operador"
-            }</div>
-          </div>
-          <button class="btn-delete" data-deluid="${u.uid}" data-delemail="${escHtml(u.email)}">Remover</button>
-        </div>`).join("")}
+      ${adminUsers.length===0
+        ?`<div style="color:var(--muted);font-size:13px;font-weight:400">Nenhum usuário cadastrado ainda.</div>`
+        :adminUsers.map(u=>`
+          <div class="user-list-item">
+            <div class="user-info">
+              <div class="user-email-txt">${escHtml(u.email)}</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+                <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;letter-spacing:0.04em;${roleBadgeStyle(u.role)}">${
+                  u.role==="admin"?"Admin":u.role==="validador"?"Validador":u.role==="espectador"?"Espectador":"Operador"
+                }</span>
+                <span style="font-size:11px;color:var(--muted);font-weight:400">${
+                  u.role==="admin"?"Acesso total":u.role==="validador"?"Entrada · Saída · Transferência":u.role==="operador"?"Entrada · Transferência":"Somente visualização"
+                }</span>
+              </div>
+            </div>
+            <button class="btn-delete" data-deluid="${u.uid}" data-delemail="${escHtml(u.email)}">Remover</button>
+          </div>`).join("")}
     </div>
   </div>`;
 }
@@ -1195,7 +1249,7 @@ function bindApp(){
   if(tab==="admin"){
     document.getElementById("adm-email")?.addEventListener("input",e=>{ STATE.adminForm.email=e.target.value; });
     document.getElementById("adm-senha")?.addEventListener("input",e=>{ STATE.adminForm.senha=e.target.value; });
-    document.getElementById("adm-role")?.addEventListener("change",e=>{ STATE.adminForm.role=e.target.value; });
+    document.getElementById("adm-role")?.addEventListener("change",e=>{ STATE.adminForm.role=e.target.value; render(); });
     document.getElementById("btn-add-user")?.addEventListener("click",addUser);
     document.querySelectorAll("[data-deluid]").forEach(b=>b.addEventListener("click",()=>deleteUser(b.dataset.deluid,b.dataset.delemail)));
   }
