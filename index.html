@@ -82,8 +82,8 @@
     }
     .header-left { display: flex; align-items: center; gap: 14px; }
     .header-logo img { width: 36px; height: 36px; object-fit: contain; }
-    .header-mark { width: 36px; height: 36px; border-radius: 9px; background: var(--bg4); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; position: relative; }
-    .header-mark::after { content: ""; position: absolute; top: 7px; right: 7px; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+    .header-mark { width: 40px; height: 40px; border-radius: 9px; background: var(--bg4); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; flex-shrink: 0; }
+    .header-mark img { width: 34px; height: 34px; object-fit: contain; position: relative; z-index: 2; }
     .header-title { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: -0.015em; }
     .header-sub { font-size: 9px; color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; margin-top: 2px; font-weight: 400; }
     .header-right { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
@@ -660,7 +660,7 @@ function renderApp(){
   <div style="display:flex;flex-direction:column;min-height:100vh">
     <div class="header">
       <div class="header-left">
-        <div class="header-mark"><img src="data:image/png;base64,${LOGO_B64}" alt="Logo" width="22" height="22" style="object-fit:contain;position:relative;z-index:1" onerror="this.parentElement.innerHTML='<span style=\'font-family:var(--mono);font-size:9px;font-weight:700;color:var(--teal)\'>EFM</span>'"/></div>
+        <div class="header-mark"><img src="data:image/png;base64,${LOGO_B64}" alt="Logo" onerror="this.outerHTML='<span style=\'font-family:var(--mono);font-size:10px;font-weight:700;color:var(--teal);letter-spacing:0.04em\'>EFM</span>'"/></div>
         <div>
           <div class="header-title">Estoque Fábrica Manaus</div>
           <div class="header-sub">CFMOTO · ${NUM_RUAS} ruas · ${TOTAL} vagas</div>
