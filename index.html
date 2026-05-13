@@ -2,8 +2,23 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>Estoque Fábrica Manaus</title>
+
+  <!-- ── PWA ── -->
+  <meta name="application-name" content="Estoque EFM"/>
+  <meta name="apple-mobile-web-app-title" content="Estoque EFM"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="theme-color" content="#0d0d0f"/>
+  <meta name="description" content="Sistema de gestão de estoque CFMOTO — Fábrica Manaus"/>
+  <link rel="manifest" href="manifest.json"/>
+
+  <!-- Ícone PWA inline (SVG como data URI) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230d0d0f'/><polygon points='16,3 27,8 27,24 16,29 5,24 5,8' fill='%231D9E75'/><polyline points='10,16 16,10 22,16 16,22 16,16' fill='none' stroke='white' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/></svg>"/>
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%230d0d0f'/><polygon points='90,18 154,50 154,130 90,162 26,130 26,50' fill='%231D9E75'/><polyline points='58,90 90,58 122,90 90,122 90,90' fill='none' stroke='white' stroke-width='14' stroke-linejoin='round' stroke-linecap='round'/></svg>"/>
+
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
@@ -98,7 +113,26 @@
     .role-validador { background: rgba(29,158,117,0.14); color: var(--teal); }
     .role-espectador{ background: rgba(122,122,130,0.15); color: #9a9aa2; }
 
-    /* ── Scanner fullscreen ── */
+    /* ── PWA safe area (notch/barra de gestos Android) ── */
+    body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+    .bottom-panel { padding-bottom: calc(22px + env(safe-area-inset-bottom)); }
+
+    /* ── Banner de instalação PWA ── */
+    #pwa-banner {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
+      background: var(--bg3); border-top: 1px solid var(--border);
+      padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    #pwa-banner-icon { width: 44px; height: 44px; border-radius: 10px; background: var(--bg4); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    #pwa-banner-text { flex: 1; }
+    #pwa-banner-title { font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+    #pwa-banner-sub { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 400; }
+    #pwa-banner-btn { padding: 9px 16px; border: none; border-radius: 8px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); white-space: nowrap; flex-shrink: 0; }
+    #pwa-banner-dismiss { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; flex-shrink: 0; padding: 4px; }
     #scanner-fullscreen { display: none; position: fixed; inset: 0; z-index: 500; background: #000; flex-direction: column; }
     #scanner-fullscreen.active { display: flex; }
     #scanner-fs-video { width: 100%; flex: 1; object-fit: cover; display: block; }
@@ -314,6 +348,58 @@
 </div>
 
 <!-- Firebase SDK -->
+<!-- ── PWA Install Banner ── -->
+<div id="pwa-banner" style="display:none">
+  <div id="pwa-banner-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="28" height="28">
+      <polygon points="16,3 27,8 27,24 16,29 5,24 5,8" fill="#1D9E75"/>
+      <polyline points="10,16 16,10 22,16 16,22 16,16" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div id="pwa-banner-text">
+    <div id="pwa-banner-title">Instalar Estoque EFM</div>
+    <div id="pwa-banner-sub">Adicionar à tela inicial · Funciona em tela cheia</div>
+  </div>
+  <button id="pwa-banner-btn">Instalar</button>
+  <button id="pwa-banner-dismiss">✕</button>
+</div>
+
+<script>
+// ── PWA: captura o evento de instalação ──
+let _pwaPrompt = null;
+// Registra service worker
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _pwaPrompt = e;
+  // Só mostra o banner se o usuário não dispensou antes
+  if(!localStorage.getItem('pwa-dismissed')) {
+    document.getElementById('pwa-banner').style.display = 'flex';
+  }
+});
+document.getElementById('pwa-banner-btn')?.addEventListener('click', async () => {
+  if(!_pwaPrompt) return;
+  _pwaPrompt.prompt();
+  const { outcome } = await _pwaPrompt.userChoice;
+  if(outcome === 'accepted') {
+    document.getElementById('pwa-banner').style.display = 'none';
+  }
+  _pwaPrompt = null;
+});
+document.getElementById('pwa-banner-dismiss')?.addEventListener('click', () => {
+  document.getElementById('pwa-banner').style.display = 'none';
+  localStorage.setItem('pwa-dismissed', '1');
+});
+// Esconde quando já instalado
+window.addEventListener('appinstalled', () => {
+  document.getElementById('pwa-banner').style.display = 'none';
+});
+</script>
+
 <!-- ── Scanner Tela Cheia ── -->
 <div id="scanner-fullscreen">
   <video id="scanner-fs-video" playsinline autoplay muted></video>
