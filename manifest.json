@@ -1,0 +1,28 @@
+{
+  "name": "Estoque Fábrica Manaus",
+  "short_name": "Estoque EFM",
+  "description": "Sistema de gestão de estoque CFMOTO — Fábrica Manaus",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0d0d0f",
+  "theme_color": "#0d0d0f",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%230d0d0f'/><polygon points='96,20 164,56 164,136 96,172 28,136 28,56' fill='%231D9E75'/><polyline points='62,96 96,62 130,96 96,130 96,96' fill='none' stroke='white' stroke-width='14' stroke-linejoin='round' stroke-linecap='round'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%230d0d0f'/><polygon points='256,52 436,148 436,364 256,460 76,364 76,148' fill='%231D9E75'/><polyline points='164,256 256,164 348,256 256,348 256,256' fill='none' stroke='white' stroke-width='36' stroke-linejoin='round' stroke-linecap='round'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "screenshots": []
+}
