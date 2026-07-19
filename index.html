@@ -180,6 +180,8 @@
     .badge-green { background: rgba(74,222,128,0.08); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
     .badge-red   { background: rgba(248,113,113,0.08); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
     .badge-purple{ background: rgba(192,132,252,0.1); color: var(--purple); border: 1px solid rgba(192,132,252,0.3); }
+    .badge-amber { background: rgba(200,151,42,0.12); color: #e8b84b; border: 1px solid rgba(200,151,42,0.3); }
+    .badge-blue  { background: rgba(96,165,250,0.12); color: var(--blue); border: 1px solid rgba(96,165,250,0.3); }
     .chevron { color: var(--muted); font-size: 11px; cursor: pointer; transition: transform 0.2s; }
     .chevron.collapsed { transform: rotate(-90deg); }
 
@@ -196,6 +198,8 @@
 
     .cell-livre    { background: rgba(74,222,128,0.05); }
     .cell-ocupado  { background: rgba(248,113,113,0.07); }
+    .cell-reservada { background: rgba(200,151,42,0.08); }
+    .cell-expedicao { background: rgba(96,165,250,0.08); }
     .cell-selected { background: rgba(200,151,42,0.1); }
     .cell-multi    { background: rgba(192,132,252,0.1); }
     .cell-highlight { outline: 1px solid rgba(200,151,42,0.5); outline-offset: -1px; }
@@ -334,6 +338,60 @@
     /* misc */
     .content-area { flex: 1; overflow-y: auto; }
     .empty-msg { text-align: center; color: var(--muted); font-size: 13px; padding: 40px 0; font-weight: 400; }
+
+    /* ── DASHBOARD ── */
+    .dash { padding: 18px 22px; display: flex; flex-direction: column; gap: 20px; }
+    .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+    .kpi { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 7px; position: relative; overflow: hidden; }
+    .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--kpi-c, var(--muted2)); }
+    .kpi-val { font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; font-family: var(--mono); color: var(--kpi-c, var(--text)); }
+    .kpi-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 500; }
+    .kpi-sub { font-size: 11px; color: var(--muted); font-weight: 400; }
+    .dash-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+    .dash-card-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 14px; }
+    .occ-big { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 12px; }
+    .occ-pct { font-size: 40px; font-weight: 700; font-family: var(--mono); line-height: 1; letter-spacing: -0.02em; }
+    .occ-bar { height: 10px; border-radius: 6px; background: var(--bg4); overflow: hidden; }
+    .occ-bar > span { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width 0.4s; }
+    .st-stack { display: flex; height: 11px; border-radius: 6px; overflow: hidden; gap: 2px; background: var(--bg4); margin: 6px 0 18px; }
+    .st-stack > span { display: block; height: 100%; border-radius: 2px; min-width: 4px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25); }
+    .st-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(124px, 1fr)); gap: 10px; }
+    .st-tile { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+    .st-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .st-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .st-num { font-family: var(--mono); font-weight: 700; font-size: 23px; letter-spacing: -0.02em; }
+    .st-lbl { font-size: 12px; font-weight: 600; color: var(--text); }
+    .st-desc { font-size: 10px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+    .st-tipo { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+    .st-tipo .stt { font-size: 12px; color: var(--muted); }
+    .st-tipo b { font-family: var(--mono); color: var(--text); font-weight: 700; font-size: 15px; margin-left: 4px; }
+    .rua-row { display: flex; align-items: center; gap: 12px; padding: 5px 0; }
+    .rua-row .rl { width: 68px; font-family: var(--mono); font-size: 12px; color: var(--text); font-weight: 600; }
+    .rua-row .rb { flex: 1; }
+    .rua-row .rp { width: 56px; text-align: right; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+    .dist-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+    .dist-row .dn { flex: 1; min-width: 0; font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
+    .dist-row .db { width: 80px; flex-shrink: 0; }
+    .dist-row .dc { width: 34px; text-align: right; font-family: var(--mono); font-size: 12px; font-weight: 600; flex-shrink: 0; }
+    .cor-dot { display: inline-block; width: 11px; height: 11px; border-radius: 3px; border: 1px solid var(--border2); flex-shrink: 0; }
+    .mc-list { display: flex; flex-direction: column; gap: 10px; }
+    .mc-model { background: var(--bg); border: 1px solid var(--border); border-radius: 11px; padding: 14px 16px; transition: border-color 0.15s, background 0.15s; }
+    .mc-model:hover { border-color: var(--border2); background: var(--bg2); }
+    .mc-model-head { display: flex; align-items: center; gap: 11px; margin-bottom: 11px; }
+    .mc-tipo { width: 28px; height: 28px; border-radius: 8px; background: var(--bg4); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .mc-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mc-total { font-family: var(--mono); font-weight: 700; font-size: 17px; letter-spacing: -0.02em; color: var(--text); flex-shrink: 0; }
+    .mc-total small { font-size: 9px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; margin-left: 4px; }
+    .mc-stack { display: flex; height: 9px; border-radius: 5px; overflow: hidden; gap: 2px; margin-bottom: 12px; background: var(--bg4); }
+    .mc-stack > span { display: block; height: 100%; border-radius: 2px; min-width: 4px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1); }
+    .mc-colors { display: flex; flex-wrap: wrap; gap: 7px; }
+    .mc-chip { display: inline-flex; align-items: center; gap: 7px; background: var(--bg4); border: 1px solid var(--border); border-radius: 20px; padding: 4px 11px 4px 7px; font-size: 11px; color: var(--muted); font-weight: 500; }
+    .mc-chip .cor-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .mc-chip b { font-family: var(--mono); font-weight: 700; color: var(--text); margin-left: 1px; }
+    .dash-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 720px) { .dash-2col { grid-template-columns: 1fr; } }
+    .btn-reservar { flex: 1; padding: 12px; border-radius: 8px; cursor: pointer; background: var(--bg4); color: #e8b84b; font-size: 13px; font-weight: 600; font-family: var(--sans); border: 1px solid rgba(200,151,42,0.3); }
+    .btn-expedir  { flex: 1; padding: 12px; border-radius: 8px; cursor: pointer; background: var(--bg4); color: var(--blue); font-size: 13px; font-weight: 600; font-family: var(--sans); border: 1px solid rgba(96,165,250,0.3); }
     .multi-info { font-size: 11px; color: var(--purple); font-weight: 500; }
     .check-box { width: 22px; height: 22px; border-radius: 5px; border: 1px solid var(--purple); background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; flex-shrink: 0; }
     .check-box.checked { background: var(--purple); border-color: var(--purple); }
@@ -496,7 +554,7 @@ let STATE = {
   locs: {}, hist: [],
   sel: null, modal: null,
   form: {tipo:"",modelo:"",cor:"",chassi:""},
-  search: "", fTipo: "Todos", tab: "mapa",
+  search: "", fTipo: "Todos", tab: "dashboard",
   toast: null, toastTimer: null,
   collapsed: {},
   multiMode: false, multiSel: new Set(),
@@ -520,6 +578,7 @@ function makeLocations(){
 async function startListeners(){
   // Vagas — documento único
   STATE.unsubLocs = onSnapshot(doc(db,"estoque","vagas"), snap=>{
+    if(STATE.simMode) return; // não sobrescreve a simulação local
     const base = makeLocations();
     if(snap.exists()){
       const data = snap.data();
@@ -527,12 +586,18 @@ async function startListeners(){
     }
     STATE.locs = base;
     render();
+  }, err=>{
+    console.error("Firestore estoque/vagas:", err.code, err.message);
+    showToast(`Erro ao carregar vagas: ${err.code}`, "err");
   });
   // Histórico — coleção, últimos 500 ordenados por timestamp desc
   const q = query(collection(db,"historico"), orderBy("ts","desc"), limit(500));
   STATE.unsubHist = onSnapshot(q, snap=>{
     STATE.hist = snap.docs.map(d=>({id:d.id,...d.data()}));
     render();
+  }, err=>{
+    console.error("Firestore historico:", err.code, err.message);
+    showToast(`Erro ao carregar histórico: ${err.code}`, "err");
   });
 }
 
@@ -543,16 +608,36 @@ function stopListeners(){
 
 // ── Firestore writes ──────────────────────────────
 async function saveVaga(id, data){
+  if(STATE.simMode){ showToast("🧪 Em simulação — saia para alterar dados reais","err"); return; }
   const ref = doc(db,"estoque","vagas");
   await setDoc(ref, {[id]: data}, {merge:true});
 }
 
 async function addHistorico(entry){
+  if(STATE.simMode) return; // simulação não grava histórico
   await addDoc(collection(db,"historico"),{
     ...entry,
     ts: serverTimestamp(),
     user: STATE.userEmail,
   });
+}
+
+// ── Simulação local (não grava no Firestore) ──────
+function simularEstoque(){
+  const models=[];
+  Object.entries(CATALOG).forEach(([tipo,arr])=>arr.forEach(m=>models.push({tipo,modelo:m.modelo,cores:m.cores})));
+  const base=makeLocations();
+  let i=0;
+  Object.keys(base).forEach(id=>{
+    const m=models[i%models.length];
+    const cor=m.cores[i%m.cores.length];
+    const item={tipo:m.tipo,modelo:m.modelo,cor,chassi:"SIM"+String(10000+i),alocadoEm:"(simulação)"};
+    if(i%17===0) item.estado="expedicao";
+    else if(i%13===0) item.estado="reservada";
+    base[id]={...base[id],status:"bloqueado",item};
+    i++;
+  });
+  STATE.simMode=true; STATE.locs=base; STATE.sel=null; showToast("🧪 Simulação: 588 vagas preenchidas","ok"); render();
 }
 
 // ── Ações ─────────────────────────────────────────
@@ -578,6 +663,23 @@ async function baixa(){
   showToast(`${id} liberado!`,"ok2");
   STATE.modal=null; STATE.sel=null; render();
 }
+
+// Muda o estado do veículo ocupante (reservada / expedicao / ocupada)
+async function setEstado(novoEstado){
+  const id = STATE.sel;
+  const loc = STATE.locs[id];
+  if(!loc || loc.status!=="bloqueado" || !loc.item) return;
+  const it = loc.item;
+  const now = new Date().toLocaleString("pt-BR");
+  const rotulo = {reservada:"Reservado", expedicao:"Expedição", ocupada:"Liberado"}[novoEstado] || "Estado";
+  await saveVaga(id,{...loc, item:{...it, estado:novoEstado}});
+  await addHistorico({loc:id,action:rotulo,tipo:it.tipo||"",modelo:it.modelo||"",cor:it.cor||"",chassi:it.chassi||"",time:now});
+  showToast(`${id}: ${rotulo}`, novoEstado==="expedicao"?"ok":novoEstado==="reservada"?"ok":"ok2");
+  render();
+}
+const reservar = ()=>setEstado("reservada");
+const expedir  = ()=>setEstado("expedicao");
+const cancelarEstado = ()=>setEstado("ocupada");
 
 async function confirmarMulti(){
   const now = new Date().toLocaleString("pt-BR");
@@ -735,14 +837,18 @@ function bindLogin(){
 function renderApp(){
   const {tab, modal, toast, sel, locs, multiMode, multiSel, role, userEmail} = STATE;
   const selLoc = sel ? locs[sel] : null;
+  const vals = Object.values(locs);
   const stats = {
     total: Object.keys(locs).length||TOTAL,
-    livre: Object.values(locs).filter(l=>l.status==="livre").length,
-    bloqueado: Object.values(locs).filter(l=>l.status==="bloqueado").length,
+    livre: vals.filter(l=>l.status==="livre").length,
+    bloqueado: vals.filter(l=>l.status==="bloqueado").length,
+    reservada: vals.filter(l=>l.item?.estado==="reservada").length,
+    expedicao: vals.filter(l=>l.item?.estado==="expedicao").length,
   };
 
   let content = "";
-  if(tab==="mapa")       content = renderMapa();
+  if(tab==="dashboard")  content = renderDashboard(stats);
+  else if(tab==="mapa")  content = renderMapa();
   else if(tab==="historico") content = renderHistorico();
   else if(tab==="admin") content = renderAdmin();
 
@@ -750,7 +856,7 @@ function renderApp(){
   const modalHtml   = modal ? renderModal(selLoc) : "";
   const toastHtml   = toast ? `<div class="toast toast-${toast.t}" style="bottom:${(!multiMode&&selLoc)?195:30}px">${toast.msg}</div>` : "";
 
-  const tabs = [["mapa","📋 Mapa"],["historico","🕓 Histórico"]];
+  const tabs = [["dashboard","📊 Dashboard"],["mapa","📋 Mapa"],["historico","🕓 Histórico"]];
   if(canAdmin()) tabs.push(["admin","⚙️ Usuários"]);
 
   return `
@@ -878,6 +984,121 @@ function updateHistList(){
     </div>`).join("");
 }
 
+function renderDashboard(stats){
+  const vals = Object.values(STATE.locs);
+  const total = stats.total || TOTAL;
+  const ocup  = stats.bloqueado;
+  const taxa  = total ? Math.round((ocup/total)*1000)/10 : 0;
+  const disp  = ocup - stats.reservada - stats.expedicao; // veículos apenas estacionados
+  const motos = vals.filter(l=>l.item?.tipo==="Motocicletas").length;
+  const atvs  = vals.filter(l=>l.item?.tipo==="ATVs").length;
+
+  const kpi = (val,lbl,color,sub)=>`<div class="kpi" style="--kpi-c:${color}">
+    <div class="kpi-val">${val}</div><div class="kpi-lbl">${lbl}</div>
+    ${sub?`<div class="kpi-sub">${sub}</div>`:""}</div>`;
+
+  // ocupação por rua
+  let ruas="";
+  for(let r=1;r<=NUM_RUAS;r++){
+    const rl=vals.filter(l=>l.rua===r);
+    const o=rl.filter(l=>l.status==="bloqueado").length;
+    const pct=rl.length?Math.round((o/rl.length)*100):0;
+    ruas+=`<div class="rua-row">
+      <div class="rl">RUA ${String(r).padStart(2,"0")}</div>
+      <div class="rb"><div class="occ-bar"><span style="width:${pct}%"></span></div></div>
+      <div class="rp">${o}/${rl.length}</div>
+    </div>`;
+  }
+
+  // distribuição por modelo e por cor (somente vagas com veículo)
+  const COR_HEX = {
+    "Zephyr Blue":"#5b7fb4","Tundra Grey":"#8a8d90","Nebula Black":"#1a1a1e","Bordeaux Red":"#6e1f2b",
+    "Ivory White":"#efe9dd","Nebula White":"#e8e8ea","Ghost Grey":"#b9bcc0","Pear Black":"#202024",
+    "Hunter Green":"#2f4a34","Lava Orange":"#e2662a","Magma Red":"#b22222","Zircon Black":"#17181c",
+    "Granite Ridge":"#6b6f74","Royal Blue":"#1f3f8f",
+  };
+  const comVeic = vals.filter(l=>l.item);
+  const byMC={};
+  comVeic.forEach(l=>{
+    const m=l.item.modelo||"—", c=l.item.cor||"—";
+    if(!byMC[m]) byMC[m]={tipo:l.item.tipo,total:0,cores:{}};
+    byMC[m].total++; byMC[m].cores[c]=(byMC[m].cores[c]||0)+1;
+  });
+  const dot=c=>`background:${COR_HEX[c]||'var(--muted2)'}`;
+  const mcRows=Object.entries(byMC).sort((a,b)=>b[1].total-a[1].total);
+  // Por modelo, com barra empilhada + legenda de cores
+  const distModeloCor = mcRows.length ? `<div class="mc-list">`+mcRows.map(([m,o])=>{
+    const cores=Object.entries(o.cores).sort((a,b)=>b[1]-a[1]);
+    const seg=cores.map(([c,n])=>`<span style="width:${(n/o.total*100)}%;${dot(c)}" title="${escHtml(c)}: ${n}"></span>`).join("");
+    const chips=cores.map(([c,n])=>`<span class="mc-chip"><span class="cor-dot" style="${dot(c)}"></span>${escHtml(c)} <b>${n}</b></span>`).join("");
+    return `<div class="mc-model">
+      <div class="mc-model-head">
+        <span class="mc-tipo">${TI[o.tipo]||"•"}</span>
+        <span class="mc-name" title="${escHtml(m)}">${escHtml(m)}</span>
+        <span class="mc-total">${o.total}<small>un</small></span>
+      </div>
+      <div class="mc-stack">${seg}</div>
+      <div class="mc-colors">${chips}</div>
+    </div>`;
+  }).join("")+`</div>` : `<div class="empty-msg" style="padding:20px 0">Nenhum veículo em estoque</div>`;
+
+  // Situação das vagas — 4 baldes que somam o total (cores iguais às do mapa)
+  const situ=[
+    ["Livres",       stats.livre,     "#22c55e","vaga vazia, pronta para receber"],
+    ["Estacionadas", disp,            "#ef4444","veículo no pátio, sem destino ainda"],
+    ["Reservadas",   stats.reservada, "#e8b84b","separado para um pedido"],
+    ["Em expedição", stats.expedicao, "#60a5fa","saindo da fábrica"],
+  ];
+  const situSeg = situ.map(([l,n,c])=> n>0?`<span style="width:${n/total*100}%;background:${c}" title="${l}: ${n}"></span>`:"").join("");
+  const situTiles = situ.map(([l,n,c,d])=>`<div class="st-tile">
+    <div class="st-top"><span class="st-dot" style="background:${c}"></span><span class="st-num">${n}</span></div>
+    <div class="st-lbl">${l}</div>
+    <div class="st-desc">${d}</div>
+  </div>`).join("");
+
+  const simBtnStyle="padding:10px 18px;border:none;border-radius:8px;cursor:pointer;background:var(--accent);color:#fff;font-size:13px;font-weight:600;font-family:var(--sans)";
+  const simBar = STATE.role==="admin" ? `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    ${STATE.simMode
+      ? `<span class="badge badge-amber">🧪 Modo simulação — dados locais, não salvos</span><button id="btn-sim-sair" style="${simBtnStyle};background:var(--bg4);color:var(--text);border:1px solid var(--border2)">✕ Sair (recarregar)</button>`
+      : `<button id="btn-simular" style="${simBtnStyle}">🎲 Simular estoque cheio</button>`}
+  </div>` : "";
+
+  return `<div class="dash">
+    ${simBar}
+    <div class="dash-grid">
+      ${kpi(total,"Total","var(--muted)")}
+      ${kpi(stats.livre,"Livres","var(--teal)")}
+      ${kpi(ocup,"Ocupadas","var(--red)")}
+      ${kpi(stats.reservada,"Reservadas","#e8b84b")}
+      ${kpi(stats.expedicao,"Em Expedição","var(--blue)")}
+    </div>
+    <div class="dash-2col">
+      <div class="dash-card">
+        <div class="dash-card-title">Taxa de Ocupação</div>
+        <div class="occ-big">
+          <div class="occ-pct" style="color:var(--accent)">${taxa}%</div>
+          <div class="kpi-sub" style="padding-bottom:6px">${ocup} de ${total} vagas ocupadas</div>
+        </div>
+        <div class="st-stack">${situSeg}</div>
+        <div class="st-grid">${situTiles}</div>
+        <div class="st-tipo">
+          <span class="stt">Por tipo:</span>
+          <span class="stt">🏍️ Motos <b>${motos}</b></span>
+          <span class="stt">🚙 ATVs <b>${atvs}</b></span>
+        </div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title">Ocupação por Rua</div>
+        ${ruas}
+      </div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-title">Por Modelo e Cor</div>
+      ${distModeloCor}
+    </div>
+  </div>`;
+}
+
 function renderMapa(){
   const {locs,search,fTipo,multiMode,multiSel,sel,collapsed} = STATE;
   const sl = search.toLowerCase();
@@ -952,13 +1173,19 @@ function renderMapa(){
           else if(loc.status==="bloqueado") cellCls="cell-ocupado";
           else cellCls="cell-livre";
           if(iH&&!iS&&!iM&&!iT&&!iD) cellCls+=" cell-highlight";
-          const codeColor=iM||iT?"#d8b4fe":iD?"#4ade80":iS?"#fbbf24":loc.status==="bloqueado"?"#ef4444":"#22c55e";
-          const txtColor=iM||iT?"#d8b4fe":iD?"#4ade80":iS?"#fbbf24":loc.status==="bloqueado"?"#fca5a5":"#6ee7b7";
-          const bdr=iM||iT?"#a855f7":iD?"#22c55e":iS?"#f59e0b":loc.status==="bloqueado"?"rgba(239,68,68,0.4)":"rgba(34,197,94,0.25)";
+          let codeColor=iM||iT?"#d8b4fe":iD?"#4ade80":iS?"#fbbf24":loc.status==="bloqueado"?"#ef4444":"#22c55e";
+          let txtColor=iM||iT?"#d8b4fe":iD?"#4ade80":iS?"#fbbf24":loc.status==="bloqueado"?"#fca5a5":"#6ee7b7";
+          let bdr=iM||iT?"#a855f7":iD?"#22c55e":iS?"#f59e0b":loc.status==="bloqueado"?"rgba(239,68,68,0.4)":"rgba(34,197,94,0.25)";
           const trCursor=STATE.transferMode?(STATE.transferStep==="select"?loc.status==="bloqueado"?"pointer":"default":loc.status==="livre"?"pointer":"default"):"pointer";
           const cursor=multiMode?(loc.status==="bloqueado"?"pointer":"default"):trCursor;
           const da=`data-locid="${loc.id}"`;
-          const icon=iM||iT?"☑":iD?"🎯":loc.status==="bloqueado"?"🔒":"";
+          let icon=iM||iT?"☑":iD?"🎯":loc.status==="bloqueado"?"🔒":"";
+          // estado estendido (reservada / expedição) — só quando não está em seleção
+          const est=loc.item?.estado;
+          if(loc.status==="bloqueado"&&!iM&&!iT&&!iD&&!iS){
+            if(est==="reservada"){ codeColor="#e8b84b"; txtColor="#e8c073"; bdr="rgba(200,151,42,0.4)"; icon="📌"; cellCls="cell-reservada"+(iH?" cell-highlight":""); }
+            else if(est==="expedicao"){ codeColor="#60a5fa"; txtColor="#93c5fd"; bdr="rgba(96,165,250,0.4)"; icon="🚚"; cellCls="cell-expedicao"+(iH?" cell-highlight":""); }
+          }
 
           html+=`<td class="td ${cellCls}" ${da} style="width:52px;border-left:2px solid ${iM||iT?"#a855f7":iD?"#22c55e":iS?"#f59e0b":g%2===0?"#253347":"#1e2d40"};font-family:var(--mono);font-weight:800;font-size:11px;color:${codeColor};overflow:visible;cursor:${cursor}">
               ${icon} ${String.fromCharCode(65+g)}${String(linha).padStart(2,"0")}
@@ -1093,12 +1320,18 @@ function renderAdmin(){
 
 function renderPanel(selLoc){
   const it = selLoc.item;
+  const est = it?.estado;
+  const canMove = STATE.role==="admin"||STATE.role==="validador"||STATE.role==="operador";
+  const canSaida = STATE.role==="admin"||STATE.role==="validador";
+  const estBadge = est==="reservada"?`<span class="badge badge-amber">📌 Reservado</span>`
+    : est==="expedicao"?`<span class="badge badge-blue">🚚 Em expedição</span>` : "";
   return `<div class="bottom-panel">
     <div class="panel-top">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span class="panel-id">${selLoc.id}</span>
         ${it?.tipo?`<span class="badge" style="background:var(--bg3);border:1px solid var(--border2);color:var(--muted)">${TI[it.tipo]} ${it.tipo}</span>`:""}
         <span class="badge ${selLoc.status==="bloqueado"?"badge-red":"badge-green"}">${selLoc.status==="bloqueado"?"🔒 Ocupado":"✓ Livre"}</span>
+        ${estBadge}
       </div>
       <button class="btn-close" id="btn-panel-close">✕</button>
     </div>
@@ -1108,9 +1341,15 @@ function renderPanel(selLoc){
       ${it.chassi?`<span class="chassi-pill">🔑 ${escHtml(it.chassi)}</span>`:""}
     </div>`:""}
     <div class="panel-actions">
-      ${(STATE.role==="admin"||STATE.role==="validador"||STATE.role==="operador")&&selLoc.status==="livre"
+      ${canMove&&selLoc.status==="livre"
         ?`<button class="btn-entrada" id="btn-entrada">🔒 Dar Entrada</button>`:""}
-      ${(STATE.role==="admin"||STATE.role==="validador")&&selLoc.status==="bloqueado"
+      ${canMove&&selLoc.status==="bloqueado"&&!est
+        ?`<button class="btn-reservar" id="btn-reservar">📌 Reservar</button><button class="btn-expedir" id="btn-expedir">🚚 Expedir</button>`:""}
+      ${canMove&&selLoc.status==="bloqueado"&&est==="reservada"
+        ?`<button class="btn-expedir" id="btn-expedir">🚚 Expedir</button><button class="btn-saida" id="btn-cancelar-estado" style="color:var(--muted)">✕ Cancelar reserva</button>`:""}
+      ${canMove&&selLoc.status==="bloqueado"&&est==="expedicao"
+        ?`<button class="btn-saida" id="btn-cancelar-estado" style="color:var(--muted)">✕ Cancelar expedição</button>`:""}
+      ${canSaida&&selLoc.status==="bloqueado"
         ?`<button class="btn-saida" id="btn-saida">✓ Dar Saída</button>`:""}
       ${STATE.role==="espectador"
         ?`<div style="font-size:12px;color:var(--muted);text-align:center;width:100%;padding:8px 0">👁 Modo visualização</div>`:""}
@@ -1265,6 +1504,10 @@ function bindApp(){
     STATE.tab=b.dataset.tab; STATE.sel=null; STATE.modal=null; render();
   }));
 
+  // Simulação (dashboard, admin)
+  document.getElementById("btn-simular")?.addEventListener("click",simularEstoque);
+  document.getElementById("btn-sim-sair")?.addEventListener("click",()=>location.reload());
+
   // ── MAPA ──
   if(tab==="mapa"){
     // search
@@ -1318,6 +1561,9 @@ function bindApp(){
     document.getElementById("btn-panel-close")?.addEventListener("click",()=>{ STATE.sel=null; render(); });
     document.getElementById("btn-entrada")?.addEventListener("click",()=>{ STATE.form={tipo:"",modelo:"",cor:"",chassi:""}; STATE.modal="alocar"; render(); });
     document.getElementById("btn-saida")?.addEventListener("click",()=>{ STATE.modal="baixa"; render(); });
+    document.getElementById("btn-reservar")?.addEventListener("click",reservar);
+    document.getElementById("btn-expedir")?.addEventListener("click",expedir);
+    document.getElementById("btn-cancelar-estado")?.addEventListener("click",cancelarEstado);
   }
 
   // ── HISTÓRICO ──

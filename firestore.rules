@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function role() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    // Perfis de usuário (email + papel)
+    // Cada um lê só o próprio doc; admin lê todos.
+    match /users/{uid} {
+      allow read:  if isSignedIn() && (request.auth.uid == uid || role() == 'admin');
+      allow write: if isSignedIn() && role() == 'admin';
+    }
+
+    // Mapa de vagas — documento único estoque/vagas
+    match /estoque/{docId} {
+      allow read:  if isSignedIn();
+      allow write: if isSignedIn() && role() in ['admin', 'validador', 'operador'];
+    }
+
+    // Histórico de movimentações
+    match /historico/{docId} {
+      allow read:   if isSignedIn();
+      allow create: if isSignedIn() && role() in ['admin', 'validador', 'operador'];
+      allow update, delete: if isSignedIn() && role() == 'admin';
+    }
+  }
+}
