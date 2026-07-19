@@ -214,6 +214,10 @@
     .panel-id { font-family: var(--mono); font-weight: 600; font-size: 17px; color: var(--text); letter-spacing: 0.05em; }
     .panel-info { display: flex; gap: 16px; margin-bottom: 12px; font-size: 12px; flex-wrap: wrap; background: var(--bg4); border-radius: 8px; padding: 10px 14px; border: 1px solid var(--border); align-items: center; font-weight: 400; }
     .chassi-pill { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--amber); background: rgba(200,151,42,0.08); border-radius: 5px; padding: 3px 9px; border: 1px solid rgba(200,151,42,0.18); letter-spacing: 0.06em; }
+    .pedido-box { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; background: rgba(200,151,42,0.07); border: 1px solid rgba(200,151,42,0.25); border-radius: 8px; padding: 9px 12px; }
+    .pedido-tag { font-size: 12px; font-weight: 700; color: #e8b84b; font-family: var(--mono); }
+    .pedido-conc { font-size: 12px; font-weight: 600; color: var(--text); }
+    .pedido-cli { font-size: 11px; color: var(--muted); }
     .panel-actions { display: flex; gap: 8px; }
     .btn-entrada { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; font-family: var(--sans); letter-spacing: -0.01em; }
     .btn-saida   { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; background: var(--bg4); color: var(--green); font-size: 13px; font-weight: 600; font-family: var(--sans); border: 1px solid rgba(74,222,128,0.25); }
@@ -388,6 +392,27 @@
     .mc-chip { display: inline-flex; align-items: center; gap: 7px; background: var(--bg4); border: 1px solid var(--border); border-radius: 20px; padding: 4px 11px 4px 7px; font-size: 11px; color: var(--muted); font-weight: 500; }
     .mc-chip .cor-dot { width: 12px; height: 12px; border-radius: 50%; }
     .mc-chip b { font-family: var(--mono); font-weight: 700; color: var(--text); margin-left: 1px; }
+
+    /* ── EXPEDIÇÃO ── */
+    .exp-wrap { padding: 18px 22px; display: flex; flex-direction: column; gap: 14px; }
+    .exp-scanbar { display: flex; align-items: center; gap: 10px; background: var(--bg3); border: 2px solid var(--accent2); border-radius: 12px; padding: 8px 10px 8px 16px; }
+    .exp-scan-ic { font-size: 20px; flex-shrink: 0; }
+    .exp-scan-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: var(--mono); font-size: 17px; font-weight: 600; letter-spacing: 0.04em; padding: 10px 4px; }
+    .exp-scan-input::placeholder { color: var(--muted2); font-weight: 400; letter-spacing: 0; font-family: var(--sans); font-size: 14px; }
+    .exp-cam-btn { flex-shrink: 0; width: 46px; height: 46px; border-radius: 9px; border: 1px solid var(--border2); background: var(--bg4); color: var(--text); font-size: 20px; cursor: pointer; }
+    .exp-count { font-size: 13px; color: var(--muted); }
+    .exp-count b { color: var(--text); font-family: var(--mono); font-size: 16px; }
+    .exp-filtros { display: flex; gap: 8px; flex-wrap: wrap; }
+    .exp-list { display: flex; flex-direction: column; gap: 8px; }
+    .exp-row { display: flex; align-items: center; gap: 14px; background: var(--bg3); border: 1px solid var(--border); border-left: 3px solid #e8b84b; border-radius: 10px; padding: 12px 14px; }
+    .exp-vaga { font-family: var(--mono); font-weight: 800; font-size: 14px; color: #e8b84b; width: 76px; flex-shrink: 0; }
+    .exp-main { flex: 1; min-width: 0; }
+    .exp-mod { font-size: 14px; font-weight: 600; color: var(--text); }
+    .exp-cor { color: var(--muted); font-weight: 400; }
+    .exp-sub { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 5px; font-size: 12px; }
+    .exp-chassi { font-family: var(--mono); color: #fbbf24; }
+    .exp-ped { font-family: var(--mono); color: var(--muted); }
+    .exp-conc { color: var(--muted); }
     .dash-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     @media (max-width: 720px) { .dash-2col { grid-template-columns: 1fr; } }
     .btn-reservar { flex: 1; padding: 12px; border-radius: 8px; cursor: pointer; background: var(--bg4); color: #e8b84b; font-size: 13px; font-weight: 600; font-family: var(--sans); border: 1px solid rgba(200,151,42,0.3); }
@@ -562,8 +587,12 @@ let STATE = {
   hAcao:"Todos", hTipo:"Todos", hMod:"", hData:"", hChassi:"",
   adminUsers: [],
   adminErr: "", adminOk: "", adminForm: {email:"",senha:"",role:"operador"},
-  unsubLocs: null, unsubHist: null,
+  pedidos: {},
+  expFiltro: "", _scanContext: null,
+  unsubLocs: null, unsubHist: null, unsubPedidos: null,
 };
+
+const canMove = ()=>["admin","validador","operador"].includes(STATE.role);
 
 function makeLocations(){
   const m={};
@@ -585,6 +614,7 @@ async function startListeners(){
       Object.keys(data).forEach(id=>{ if(base[id]) base[id]=data[id]; });
     }
     STATE.locs = base;
+    reconcilePedidos();
     render();
   }, err=>{
     console.error("Firestore estoque/vagas:", err.code, err.message);
@@ -599,11 +629,42 @@ async function startListeners(){
     console.error("Firestore historico:", err.code, err.message);
     showToast(`Erro ao carregar histórico: ${err.code}`, "err");
   });
+  // Pedidos — coleção sincronizada do Excel/SharePoint (via Power Automate)
+  STATE.unsubPedidos = onSnapshot(collection(db,"pedidos"), snap=>{
+    if(STATE.simMode) return;
+    STATE.pedidos = {};
+    snap.docs.forEach(d=>{ STATE.pedidos[d.id] = {id:d.id, ...d.data()}; });
+    reconcilePedidos();
+    render();
+  }, err=>{
+    // silencioso: se as regras de 'pedidos' ainda não foram publicadas, apenas loga
+    console.warn("Firestore pedidos:", err.code, err.message);
+  });
 }
 
 function stopListeners(){
   if(STATE.unsubLocs) STATE.unsubLocs();
   if(STATE.unsubHist) STATE.unsubHist();
+  if(STATE.unsubPedidos) STATE.unsubPedidos();
+}
+
+// ── Reconciliação pedidos ↔ vagas (por chassi) ────
+// Quando um pedido tem chassi preenchido, acha a vaga com esse chassi
+// e marca como reservada, anexando pedido + concessionária. Idempotente.
+function reconcilePedidos(){
+  if(STATE.simMode) return;      // simulação cuida do seu próprio estado
+  if(!canMove()) return;         // só quem pode gravar reconcilia (espectador só exibe)
+  Object.values(STATE.pedidos||{}).forEach(p=>{
+    const ch = (p.chassi||"").trim();
+    if(!ch) return;
+    const loc = Object.values(STATE.locs).find(l=>l.item && (l.item.chassi||"").trim()===ch);
+    if(!loc) return;             // chassi ainda não deu entrada no app
+    const it = loc.item;
+    const jaOk = it.estado==="reservada" && it.pedido===p.pedido && it.concessionaria===(p.concessionaria||"");
+    if(jaOk) return;
+    saveVaga(loc.id, {...loc, item:{...it, estado:"reservada", pedido:p.pedido||"", concessionaria:p.concessionaria||"", cliente:p.cliente||""}});
+    addHistorico({loc:loc.id, action:"Reservado", tipo:it.tipo||"", modelo:it.modelo||"", cor:it.cor||"", chassi:it.chassi||"", pedido:p.pedido||"", time:new Date().toLocaleString("pt-BR")});
+  });
 }
 
 // ── Firestore writes ──────────────────────────────
@@ -626,18 +687,26 @@ async function addHistorico(entry){
 function simularEstoque(){
   const models=[];
   Object.entries(CATALOG).forEach(([tipo,arr])=>arr.forEach(m=>models.push({tipo,modelo:m.modelo,cores:m.cores})));
+  const DEALERS=["Moto Manaus","CFMOTO Amazonas","Norte Motos","Rio Negro Veículos","Solimões ATV"];
   const base=makeLocations();
   let i=0;
   Object.keys(base).forEach(id=>{
     const m=models[i%models.length];
     const cor=m.cores[i%m.cores.length];
     const item={tipo:m.tipo,modelo:m.modelo,cor,chassi:"SIM"+String(10000+i),alocadoEm:"(simulação)"};
-    if(i%17===0) item.estado="expedicao";
-    else if(i%13===0) item.estado="reservada";
+    if(i%9===0){ // reservada → simula um pedido vindo do Excel
+      item.estado="reservada";
+      item.pedido=String(31000+i);
+      item.concessionaria=DEALERS[i%DEALERS.length];
+      item.cliente="C"+String(4000+i);
+    }
     base[id]={...base[id],status:"bloqueado",item};
     i++;
   });
-  STATE.simMode=true; STATE.locs=base; STATE.sel=null; showToast("🧪 Simulação: 588 vagas preenchidas","ok"); render();
+  // abre automaticamente a primeira vaga reservada, no mapa, pra já mostrar o pedido
+  const primeiraReservada = Object.values(base).find(l=>l.item?.estado==="reservada")?.id || null;
+  STATE.simMode=true; STATE.locs=base; STATE.sel=primeiraReservada; STATE.tab="mapa";
+  showToast("🧪 Simulação: 588 vagas — abrindo uma reservada","ok"); render();
 }
 
 // ── Ações ─────────────────────────────────────────
@@ -664,22 +733,37 @@ async function baixa(){
   STATE.modal=null; STATE.sel=null; render();
 }
 
-// Muda o estado do veículo ocupante (reservada / expedicao / ocupada)
+// Muda o estado do veículo ocupante (reservada / ocupada)
 async function setEstado(novoEstado){
   const id = STATE.sel;
   const loc = STATE.locs[id];
   if(!loc || loc.status!=="bloqueado" || !loc.item) return;
   const it = loc.item;
   const now = new Date().toLocaleString("pt-BR");
-  const rotulo = {reservada:"Reservado", expedicao:"Expedição", ocupada:"Liberado"}[novoEstado] || "Estado";
+  const rotulo = {reservada:"Reservado", ocupada:"Liberado"}[novoEstado] || "Estado";
   await saveVaga(id,{...loc, item:{...it, estado:novoEstado}});
-  await addHistorico({loc:id,action:rotulo,tipo:it.tipo||"",modelo:it.modelo||"",cor:it.cor||"",chassi:it.chassi||"",time:now});
-  showToast(`${id}: ${rotulo}`, novoEstado==="expedicao"?"ok":novoEstado==="reservada"?"ok":"ok2");
+  await addHistorico({loc:id,action:rotulo,tipo:it.tipo||"",modelo:it.modelo||"",cor:it.cor||"",chassi:it.chassi||"",pedido:it.pedido||"",time:now});
+  showToast(`${id}: ${rotulo}`,"ok");
   render();
 }
 const reservar = ()=>setEstado("reservada");
-const expedir  = ()=>setEstado("expedicao");
 const cancelarEstado = ()=>setEstado("ocupada");
+
+// Expedir = veículo sai para o cliente → libera a vaga (baixa) e registra "Expedição"
+async function expedirVaga(){
+  const id = STATE.sel;
+  const loc = STATE.locs[id];
+  const it  = loc?.item;
+  const now = new Date().toLocaleString("pt-BR");
+  if(STATE.simMode){ // simulação: libera localmente, sem Firestore
+    STATE.locs = {...STATE.locs, [id]:{...loc,status:"livre",item:null}};
+    STATE.modal=null; STATE.sel=null; showToast(`${id} expedido (simulação)`,"ok2"); render(); return;
+  }
+  await saveVaga(id,{...loc,status:"livre",item:null});
+  await addHistorico({loc:id,action:"Expedição",tipo:it?.tipo||"",modelo:it?.modelo||"",cor:it?.cor||"",chassi:it?.chassi||"",pedido:it?.pedido||"",time:now});
+  showToast(`${id} expedido — vaga liberada`,"ok2");
+  STATE.modal=null; STATE.sel=null; render();
+}
 
 async function confirmarMulti(){
   const now = new Date().toLocaleString("pt-BR");
@@ -843,20 +927,22 @@ function renderApp(){
     livre: vals.filter(l=>l.status==="livre").length,
     bloqueado: vals.filter(l=>l.status==="bloqueado").length,
     reservada: vals.filter(l=>l.item?.estado==="reservada").length,
-    expedicao: vals.filter(l=>l.item?.estado==="expedicao").length,
   };
 
   let content = "";
   if(tab==="dashboard")  content = renderDashboard(stats);
   else if(tab==="mapa")  content = renderMapa();
+  else if(tab==="expedicao") content = renderExpedicao();
   else if(tab==="historico") content = renderHistorico();
   else if(tab==="admin") content = renderAdmin();
 
-  const bottomPanel = (!multiMode&&selLoc) ? renderPanel(selLoc) : "";
+  const bottomPanel = (!multiMode&&selLoc&&tab==="mapa") ? renderPanel(selLoc) : "";
   const modalHtml   = modal ? renderModal(selLoc) : "";
   const toastHtml   = toast ? `<div class="toast toast-${toast.t}" style="bottom:${(!multiMode&&selLoc)?195:30}px">${toast.msg}</div>` : "";
 
-  const tabs = [["dashboard","📊 Dashboard"],["mapa","📋 Mapa"],["historico","🕓 Histórico"]];
+  const tabs = [["dashboard","📊 Dashboard"],["mapa","📋 Mapa"]];
+  if(canMove()) tabs.push(["expedicao","🚚 Expedição"]);
+  tabs.push(["historico","🕓 Histórico"]);
   if(canAdmin()) tabs.push(["admin","⚙️ Usuários"]);
 
   return `
@@ -889,7 +975,7 @@ function renderApp(){
       ${tabs.map(([t,l])=>`<button class="tab-btn ${tab===t?'active':''}" data-tab="${t}">${l}</button>`).join("")}
     </div>
     ${tab==="mapa"||tab==="historico" ? renderToolbar() : ""}
-    <div class="content-area" style="padding-bottom:${(!multiMode&&selLoc)?175:20}px">
+    <div class="content-area" style="padding-bottom:${(!multiMode&&selLoc&&tab==="mapa")?175:20}px">
       ${content}
     </div>
     ${bottomPanel}
@@ -989,7 +1075,7 @@ function renderDashboard(stats){
   const total = stats.total || TOTAL;
   const ocup  = stats.bloqueado;
   const taxa  = total ? Math.round((ocup/total)*1000)/10 : 0;
-  const disp  = ocup - stats.reservada - stats.expedicao; // veículos apenas estacionados
+  const disp  = ocup - stats.reservada; // ocupadas sem reserva = em estoque disponível
   const motos = vals.filter(l=>l.item?.tipo==="Motocicletas").length;
   const atvs  = vals.filter(l=>l.item?.tipo==="ATVs").length;
 
@@ -1045,9 +1131,8 @@ function renderDashboard(stats){
   // Situação das vagas — 4 baldes que somam o total (cores iguais às do mapa)
   const situ=[
     ["Livres",       stats.livre,     "#22c55e","vaga vazia, pronta para receber"],
-    ["Estacionadas", disp,            "#ef4444","veículo no pátio, sem destino ainda"],
-    ["Reservadas",   stats.reservada, "#e8b84b","separado para um pedido"],
-    ["Em expedição", stats.expedicao, "#60a5fa","saindo da fábrica"],
+    ["Em estoque",   disp,            "#ef4444","produzido, disponível (sem reserva)"],
+    ["Reservadas",   stats.reservada, "#e8b84b","separado para um pedido/cliente"],
   ];
   const situSeg = situ.map(([l,n,c])=> n>0?`<span style="width:${n/total*100}%;background:${c}" title="${l}: ${n}"></span>`:"").join("");
   const situTiles = situ.map(([l,n,c,d])=>`<div class="st-tile">
@@ -1070,7 +1155,6 @@ function renderDashboard(stats){
       ${kpi(stats.livre,"Livres","var(--teal)")}
       ${kpi(ocup,"Ocupadas","var(--red)")}
       ${kpi(stats.reservada,"Reservadas","#e8b84b")}
-      ${kpi(stats.expedicao,"Em Expedição","var(--blue)")}
     </div>
     <div class="dash-2col">
       <div class="dash-card">
@@ -1097,6 +1181,59 @@ function renderDashboard(stats){
       ${distModeloCor}
     </div>
   </div>`;
+}
+
+// ── Expedição por leitura ─────────────────────────
+function normChassi(s){ return String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,""); }
+
+function renderExpedicao(){
+  const reservados = Object.values(STATE.locs).filter(l=>l.item?.estado==="reservada");
+  const concs = [...new Set(reservados.map(l=>l.item.concessionaria||"—"))].sort();
+  const filtro = STATE.expFiltro||"";
+  let lista = filtro ? reservados.filter(l=>(l.item.concessionaria||"—")===filtro) : reservados;
+  lista = lista.slice().sort((a,b)=>(a.item.concessionaria||"").localeCompare(b.item.concessionaria||"") || String(a.item.pedido||"").localeCompare(String(b.item.pedido||"")));
+
+  const filtroChips = concs.length>1 ? `<div class="exp-filtros">
+    <button class="chip ${!filtro?"active-all":""}" data-expfiltro="">Todas (${reservados.length})</button>
+    ${concs.map(c=>`<button class="chip ${filtro===c?"active-atv":""}" data-expfiltro="${escHtml(c)}">${escHtml(c)} (${reservados.filter(l=>(l.item.concessionaria||"—")===c).length})</button>`).join("")}
+  </div>` : "";
+
+  const rows = lista.length ? lista.map(l=>{
+    const it=l.item;
+    return `<div class="exp-row">
+      <div class="exp-vaga">${l.id}</div>
+      <div class="exp-main">
+        <div class="exp-mod">${TI[it.tipo]||""} ${escHtml(it.modelo)}<span class="exp-cor"> · ${escHtml(it.cor||"")}</span></div>
+        <div class="exp-sub"><span class="exp-chassi">🔑 ${escHtml(it.chassi||"—")}</span><span class="exp-ped">📄 ${escHtml(it.pedido||"—")}</span><span class="exp-conc">🏪 ${escHtml(it.concessionaria||"—")}</span></div>
+      </div>
+    </div>`;
+  }).join("") : `<div class="empty-msg">${reservados.length===0?"Nenhum veículo reservado no momento":"Nenhum reservado nesta carga"}</div>`;
+
+  return `<div class="exp-wrap">
+    <div class="exp-scanbar">
+      <span class="exp-scan-ic">🔫</span>
+      <input id="exp-scan-input" class="exp-scan-input" placeholder="Bipe ou digite o chassi e tecle Enter…" autocomplete="off" autofocus/>
+      <button id="exp-scan-cam" class="exp-cam-btn" title="Usar câmera">📷</button>
+    </div>
+    <div class="exp-count">🚚 <b>${lista.length}</b> para expedir${filtro?` · carga: <b>${escHtml(filtro)}</b>`:""}</div>
+    ${filtroChips}
+    <div class="exp-list">${rows}</div>
+  </div>`;
+}
+
+// Bipou/digitou um chassi na expedição
+function processExpedicaoScan(raw){
+  const ch = normChassi(raw);
+  if(!ch) return;
+  const loc = Object.values(STATE.locs).find(l=>l.item && normChassi(l.item.chassi)===ch);
+  if(!loc){ showToast("❌ Chassi não encontrado no estoque","err"); return; }
+  if(loc.item.estado!=="reservada"){ showToast(`⚠️ ${loc.id}: veículo NÃO está reservado — não pode expedir`,"err"); return; }
+  const filtro = STATE.expFiltro||"";
+  if(filtro && (loc.item.concessionaria||"—")!==filtro){
+    showToast(`⚠️ Esse veículo é da carga "${loc.item.concessionaria||"—"}", não de "${filtro}"`,"err"); return;
+  }
+  // Confirmar antes: abre o modal de expedição com os dados do veículo
+  STATE.sel = loc.id; STATE.modal = "expedir"; render();
 }
 
 function renderMapa(){
@@ -1182,9 +1319,8 @@ function renderMapa(){
           let icon=iM||iT?"☑":iD?"🎯":loc.status==="bloqueado"?"🔒":"";
           // estado estendido (reservada / expedição) — só quando não está em seleção
           const est=loc.item?.estado;
-          if(loc.status==="bloqueado"&&!iM&&!iT&&!iD&&!iS){
-            if(est==="reservada"){ codeColor="#e8b84b"; txtColor="#e8c073"; bdr="rgba(200,151,42,0.4)"; icon="📌"; cellCls="cell-reservada"+(iH?" cell-highlight":""); }
-            else if(est==="expedicao"){ codeColor="#60a5fa"; txtColor="#93c5fd"; bdr="rgba(96,165,250,0.4)"; icon="🚚"; cellCls="cell-expedicao"+(iH?" cell-highlight":""); }
+          if(loc.status==="bloqueado"&&!iM&&!iT&&!iD&&!iS&&est==="reservada"){
+            codeColor="#e8b84b"; txtColor="#e8c073"; bdr="rgba(200,151,42,0.4)"; icon="📌"; cellCls="cell-reservada"+(iH?" cell-highlight":"");
           }
 
           html+=`<td class="td ${cellCls}" ${da} style="width:52px;border-left:2px solid ${iM||iT?"#a855f7":iD?"#22c55e":iS?"#f59e0b":g%2===0?"#253347":"#1e2d40"};font-family:var(--mono);font-weight:800;font-size:11px;color:${codeColor};overflow:visible;cursor:${cursor}">
@@ -1323,8 +1459,7 @@ function renderPanel(selLoc){
   const est = it?.estado;
   const canMove = STATE.role==="admin"||STATE.role==="validador"||STATE.role==="operador";
   const canSaida = STATE.role==="admin"||STATE.role==="validador";
-  const estBadge = est==="reservada"?`<span class="badge badge-amber">📌 Reservado</span>`
-    : est==="expedicao"?`<span class="badge badge-blue">🚚 Em expedição</span>` : "";
+  const estBadge = est==="reservada"?`<span class="badge badge-amber">📌 Reservado</span>` : "";
   return `<div class="bottom-panel">
     <div class="panel-top">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
@@ -1340,17 +1475,20 @@ function renderPanel(selLoc){
       ${it.cor?`<span><span style="color:var(--muted)">Cor: </span>${escHtml(it.cor)}</span>`:""}
       ${it.chassi?`<span class="chassi-pill">🔑 ${escHtml(it.chassi)}</span>`:""}
     </div>`:""}
+    ${(it&&(it.pedido||it.concessionaria))?`<div class="pedido-box">
+      <span class="pedido-tag">📄 Pedido ${escHtml(it.pedido||"—")}</span>
+      ${it.concessionaria?`<span class="pedido-conc">🏪 ${escHtml(it.concessionaria)}</span>`:""}
+      ${it.cliente?`<span class="pedido-cli">👤 ${escHtml(it.cliente)}</span>`:""}
+    </div>`:""}
     <div class="panel-actions">
       ${canMove&&selLoc.status==="livre"
         ?`<button class="btn-entrada" id="btn-entrada">🔒 Dar Entrada</button>`:""}
       ${canMove&&selLoc.status==="bloqueado"&&!est
-        ?`<button class="btn-reservar" id="btn-reservar">📌 Reservar</button><button class="btn-expedir" id="btn-expedir">🚚 Expedir</button>`:""}
+        ?`<button class="btn-reservar" id="btn-reservar">📌 Reservar</button>`:""}
       ${canMove&&selLoc.status==="bloqueado"&&est==="reservada"
         ?`<button class="btn-expedir" id="btn-expedir">🚚 Expedir</button><button class="btn-saida" id="btn-cancelar-estado" style="color:var(--muted)">✕ Cancelar reserva</button>`:""}
-      ${canMove&&selLoc.status==="bloqueado"&&est==="expedicao"
-        ?`<button class="btn-saida" id="btn-cancelar-estado" style="color:var(--muted)">✕ Cancelar expedição</button>`:""}
       ${canSaida&&selLoc.status==="bloqueado"
-        ?`<button class="btn-saida" id="btn-saida">✓ Dar Saída</button>`:""}
+        ?`<button class="btn-saida" id="btn-saida" style="color:var(--muted)">✓ Dar Saída</button>`:""}
       ${STATE.role==="espectador"
         ?`<div style="font-size:12px;color:var(--muted);text-align:center;width:100%;padding:8px 0">👁 Modo visualização</div>`:""}
     </div>
@@ -1415,6 +1553,24 @@ function renderModal(selLoc){
     </div>`:""}
     <div class="modal-actions">
       <button class="btn-saida" id="btn-baixa" style="flex:1">Confirmar Saída</button>
+      <button class="btn-cancel" id="btn-modal-cancel">Cancelar</button>
+    </div>
+  </div></div>`;
+
+  if(modal==="expedir") return `<div class="modal-overlay"><div class="modal-box">
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-size:38px;margin-bottom:8px">🚚</div>
+      <div class="modal-title">Confirmar Expedição</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:5px">Vaga <span style="font-family:var(--mono);color:var(--blue);font-weight:700">${selLoc?.id}</span> será liberada — veículo sai para o cliente.</div>
+    </div>
+    ${selLoc?.item?`<div style="background:var(--bg3);border-radius:8px;padding:11px 14px;margin-bottom:16px;border:1px solid var(--border)">
+      <div style="font-size:13px;font-weight:700;color:var(--blue);margin-bottom:6px">${escHtml(selLoc.item.modelo)}</div>
+      ${selLoc.item.cor?`<div style="font-size:12px;color:var(--muted)">Cor: ${escHtml(selLoc.item.cor)}</div>`:""}
+      ${selLoc.item.chassi?`<div class="chassi-badge" style="margin-top:8px"><span class="chassi-lbl">Chassi:</span><span class="chassi-val">${escHtml(selLoc.item.chassi)}</span></div>`:""}
+      ${selLoc.item.pedido?`<div style="font-size:12px;color:#e8b84b;margin-top:8px;font-family:var(--mono)">📄 Pedido ${escHtml(selLoc.item.pedido)}${selLoc.item.concessionaria?` · ${escHtml(selLoc.item.concessionaria)}`:""}</div>`:""}
+    </div>`:""}
+    <div class="modal-actions">
+      <button class="btn-expedir" id="btn-expedir-confirm" style="flex:1">Confirmar Expedição</button>
       <button class="btn-cancel" id="btn-modal-cancel">Cancelar</button>
     </div>
   </div></div>`;
@@ -1562,8 +1718,27 @@ function bindApp(){
     document.getElementById("btn-entrada")?.addEventListener("click",()=>{ STATE.form={tipo:"",modelo:"",cor:"",chassi:""}; STATE.modal="alocar"; render(); });
     document.getElementById("btn-saida")?.addEventListener("click",()=>{ STATE.modal="baixa"; render(); });
     document.getElementById("btn-reservar")?.addEventListener("click",reservar);
-    document.getElementById("btn-expedir")?.addEventListener("click",expedir);
+    document.getElementById("btn-expedir")?.addEventListener("click",()=>{ STATE.modal="expedir"; render(); });
     document.getElementById("btn-cancelar-estado")?.addEventListener("click",cancelarEstado);
+  }
+
+  // ── EXPEDIÇÃO ──
+  if(tab==="expedicao"){
+    const inp = document.getElementById("exp-scan-input");
+    if(inp && !STATE.modal) inp.focus();            // mantém foco pronto para o leitor
+    inp?.addEventListener("keydown", e=>{
+      if(e.key==="Enter"){ const v=e.target.value; e.target.value=""; processExpedicaoScan(v); }
+    });
+    // Foco pegajoso: se perder o foco, recupera — assim o leitor Bluetooth sempre acerta o campo.
+    // Não recupera se houver modal aberto ou a câmera ativa (evita teclado virtual atrapalhar).
+    inp?.addEventListener("blur", ()=>{
+      setTimeout(()=>{
+        const camAtiva = document.getElementById("scanner-fullscreen")?.classList.contains("active");
+        if(STATE.tab==="expedicao" && !STATE.modal && !camAtiva) inp.focus();
+      }, 120);
+    });
+    document.getElementById("exp-scan-cam")?.addEventListener("click", ()=>{ STATE._scanContext="expedicao"; startScanner(); });
+    document.querySelectorAll("[data-expfiltro]").forEach(b=>b.addEventListener("click",()=>{ STATE.expFiltro=b.dataset.expfiltro; render(); }));
   }
 
   // ── HISTÓRICO ──
@@ -1597,15 +1772,17 @@ function bindApp(){
   document.getElementById("btn-alocar")?.addEventListener("click",alocar);
 
   // ── Scanner de código de barras ──
-  document.getElementById("btn-scan-chassi")?.addEventListener("click", startScanner);
+  document.getElementById("btn-scan-chassi")?.addEventListener("click", ()=>{ STATE._scanContext="entrada"; startScanner(); });
   document.getElementById("btn-scan-cancel")?.addEventListener("click", stopScanner);
   document.getElementById("btn-scan-ok")?.addEventListener("click", ()=>{
     const chassi = STATE._scannedChassi||"";
     if(!chassi) return;
     stopScanner();
-    _applyScannedChassi(chassi);
+    if(STATE._scanContext==="expedicao"){ STATE._scanContext=null; processExpedicaoScan(chassi); }
+    else _applyScannedChassi(chassi);
   });
   document.getElementById("btn-baixa")?.addEventListener("click",baixa);
+  document.getElementById("btn-expedir-confirm")?.addEventListener("click",expedirVaga);
   document.getElementById("btn-multi-ok")?.addEventListener("click",confirmarMulti);
 }
 

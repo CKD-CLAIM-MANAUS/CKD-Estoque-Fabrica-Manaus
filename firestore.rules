@@ -28,5 +28,14 @@ service cloud.firestore {
       allow create: if isSignedIn() && role() in ['admin', 'validador', 'operador'];
       allow update, delete: if isSignedIn() && role() == 'admin';
     }
+
+    // Pedidos — sincronizados do Excel/SharePoint via Power Automate.
+    // O Power Automate grava com service account (ignora estas regras).
+    // Aqui só governamos o acesso do app: todos logados leem; admin/validador
+    // podem escrever (ex.: cadastro manual de pedido).
+    match /pedidos/{docId} {
+      allow read:  if isSignedIn();
+      allow write: if isSignedIn() && role() in ['admin', 'validador'];
+    }
   }
 }
