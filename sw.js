@@ -1,5 +1,5 @@
 // Service Worker — Estoque Fábrica Manaus
-const CACHE = 'efm-v14';
+const CACHE = 'efm-v15';
 const ASSETS = [
   './',
   './index.html',

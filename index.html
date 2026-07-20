@@ -607,7 +607,6 @@ function makeLocations(){
 async function startListeners(){
   // Vagas — documento único
   STATE.unsubLocs = onSnapshot(doc(db,"estoque","vagas"), snap=>{
-    if(STATE.simMode) return; // não sobrescreve a simulação local
     const base = makeLocations();
     if(snap.exists()){
       const data = snap.data();
@@ -631,7 +630,6 @@ async function startListeners(){
   });
   // Pedidos — coleção sincronizada do Excel/SharePoint (via Power Automate)
   STATE.unsubPedidos = onSnapshot(collection(db,"pedidos"), snap=>{
-    if(STATE.simMode) return;
     STATE.pedidos = {};
     snap.docs.forEach(d=>{ STATE.pedidos[d.id] = {id:d.id, ...d.data()}; });
     reconcilePedidos();
@@ -652,7 +650,6 @@ function stopListeners(){
 // Quando um pedido tem chassi preenchido, acha a vaga com esse chassi
 // e marca como reservada, anexando pedido + concessionária. Idempotente.
 function reconcilePedidos(){
-  if(STATE.simMode) return;      // simulação cuida do seu próprio estado
   if(!canMove()) return;         // só quem pode gravar reconcilia (espectador só exibe)
   Object.values(STATE.pedidos||{}).forEach(p=>{
     const ch = (p.chassi||"").trim();
@@ -669,44 +666,16 @@ function reconcilePedidos(){
 
 // ── Firestore writes ──────────────────────────────
 async function saveVaga(id, data){
-  if(STATE.simMode){ showToast("🧪 Em simulação — saia para alterar dados reais","err"); return; }
   const ref = doc(db,"estoque","vagas");
   await setDoc(ref, {[id]: data}, {merge:true});
 }
 
 async function addHistorico(entry){
-  if(STATE.simMode) return; // simulação não grava histórico
   await addDoc(collection(db,"historico"),{
     ...entry,
     ts: serverTimestamp(),
     user: STATE.userEmail,
   });
-}
-
-// ── Simulação local (não grava no Firestore) ──────
-function simularEstoque(){
-  const models=[];
-  Object.entries(CATALOG).forEach(([tipo,arr])=>arr.forEach(m=>models.push({tipo,modelo:m.modelo,cores:m.cores})));
-  const DEALERS=["Moto Manaus","CFMOTO Amazonas","Norte Motos","Rio Negro Veículos","Solimões ATV"];
-  const base=makeLocations();
-  let i=0;
-  Object.keys(base).forEach(id=>{
-    const m=models[i%models.length];
-    const cor=m.cores[i%m.cores.length];
-    const item={tipo:m.tipo,modelo:m.modelo,cor,chassi:"SIM"+String(10000+i),alocadoEm:"(simulação)"};
-    if(i%9===0){ // reservada → simula um pedido vindo do Excel
-      item.estado="reservada";
-      item.pedido=String(31000+i);
-      item.concessionaria=DEALERS[i%DEALERS.length];
-      item.cliente="C"+String(4000+i);
-    }
-    base[id]={...base[id],status:"bloqueado",item};
-    i++;
-  });
-  // abre automaticamente a primeira vaga reservada, no mapa, pra já mostrar o pedido
-  const primeiraReservada = Object.values(base).find(l=>l.item?.estado==="reservada")?.id || null;
-  STATE.simMode=true; STATE.locs=base; STATE.sel=primeiraReservada; STATE.tab="mapa";
-  showToast("🧪 Simulação: 588 vagas — abrindo uma reservada","ok"); render();
 }
 
 // ── Ações ─────────────────────────────────────────
@@ -755,10 +724,6 @@ async function expedirVaga(){
   const loc = STATE.locs[id];
   const it  = loc?.item;
   const now = new Date().toLocaleString("pt-BR");
-  if(STATE.simMode){ // simulação: libera localmente, sem Firestore
-    STATE.locs = {...STATE.locs, [id]:{...loc,status:"livre",item:null}};
-    STATE.modal=null; STATE.sel=null; showToast(`${id} expedido (simulação)`,"ok2"); render(); return;
-  }
   await saveVaga(id,{...loc,status:"livre",item:null});
   await addHistorico({loc:id,action:"Expedição",tipo:it?.tipo||"",modelo:it?.modelo||"",cor:it?.cor||"",chassi:it?.chassi||"",pedido:it?.pedido||"",time:now});
   showToast(`${id} expedido — vaga liberada`,"ok2");
@@ -1141,15 +1106,7 @@ function renderDashboard(stats){
     <div class="st-desc">${d}</div>
   </div>`).join("");
 
-  const simBtnStyle="padding:10px 18px;border:none;border-radius:8px;cursor:pointer;background:var(--accent);color:#fff;font-size:13px;font-weight:600;font-family:var(--sans)";
-  const simBar = STATE.role==="admin" ? `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-    ${STATE.simMode
-      ? `<span class="badge badge-amber">🧪 Modo simulação — dados locais, não salvos</span><button id="btn-sim-sair" style="${simBtnStyle};background:var(--bg4);color:var(--text);border:1px solid var(--border2)">✕ Sair (recarregar)</button>`
-      : `<button id="btn-simular" style="${simBtnStyle}">🎲 Simular estoque cheio</button>`}
-  </div>` : "";
-
   return `<div class="dash">
-    ${simBar}
     <div class="dash-grid">
       ${kpi(total,"Total","var(--muted)")}
       ${kpi(stats.livre,"Livres","var(--teal)")}
@@ -1659,10 +1616,6 @@ function bindApp(){
   document.querySelectorAll(".tab-btn").forEach(b=>b.addEventListener("click",()=>{
     STATE.tab=b.dataset.tab; STATE.sel=null; STATE.modal=null; render();
   }));
-
-  // Simulação (dashboard, admin)
-  document.getElementById("btn-simular")?.addEventListener("click",simularEstoque);
-  document.getElementById("btn-sim-sair")?.addEventListener("click",()=>location.reload());
 
   // ── MAPA ──
   if(tab==="mapa"){
