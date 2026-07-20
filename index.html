@@ -966,7 +966,7 @@ function renderApp(){
           <span class="user-badge-role role-${role||'espectador'}">${
             role==="admin"?"Admin":role==="validador"?"Validador":role==="espectador"?"Espectador":"Operador"
           }</span>
-          <span class="user-email">${userEmail}</span>
+          <span class="user-email">${escHtml(userEmail)}</span>
           <button class="btn-logout" id="btn-logout">Sair</button>
         </div>
       </div>

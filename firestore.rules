@@ -5,6 +5,12 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
+    // Só é usuário legítimo quem tem PERFIL (doc em users/{uid}), criado pelo admin.
+    // Quem se cadastra sozinho (signUp público) não tem perfil → não lê nada.
+    function hasProfile() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
     function role() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
@@ -18,24 +24,23 @@ service cloud.firestore {
 
     // Mapa de vagas — documento único estoque/vagas
     match /estoque/{docId} {
-      allow read:  if isSignedIn();
-      allow write: if isSignedIn() && role() in ['admin', 'validador', 'operador'];
+      allow read:  if hasProfile();
+      allow write: if hasProfile() && role() in ['admin', 'validador', 'operador'];
     }
 
     // Histórico de movimentações
     match /historico/{docId} {
-      allow read:   if isSignedIn();
-      allow create: if isSignedIn() && role() in ['admin', 'validador', 'operador'];
-      allow update, delete: if isSignedIn() && role() == 'admin';
+      allow read:   if hasProfile();
+      allow create: if hasProfile() && role() in ['admin', 'validador', 'operador'];
+      allow update, delete: if hasProfile() && role() == 'admin';
     }
 
     // Pedidos — sincronizados do Excel/SharePoint via Power Automate.
     // O Power Automate grava com service account (ignora estas regras).
-    // Aqui só governamos o acesso do app: todos logados leem; admin/validador
-    // podem escrever (ex.: cadastro manual de pedido).
+    // No app: só quem tem perfil lê; admin/validador podem escrever (cadastro manual).
     match /pedidos/{docId} {
-      allow read:  if isSignedIn();
-      allow write: if isSignedIn() && role() in ['admin', 'validador'];
+      allow read:  if hasProfile();
+      allow write: if hasProfile() && role() in ['admin', 'validador'];
     }
   }
 }
